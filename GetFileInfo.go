@@ -1,6 +1,7 @@
 package GetFileInfo
 
 import (
+	"github.com/zhangyiming748/log"
 	"os"
 	"path"
 	"path/filepath"
@@ -22,7 +23,10 @@ const (
 获取单个文件信息
 */
 func GetFileInfo(absPath string) Info {
-	mate, _ := os.Stat(absPath)
+	mate, err := os.Stat(absPath)
+	if err != nil {
+		log.Warn.Printf("获取文件 %v 元数据发生错误 %v\n", absPath, err)
+	}
 	ext := path.Ext(absPath)
 	dir, file := filepath.Split(absPath)
 	i := Info{
