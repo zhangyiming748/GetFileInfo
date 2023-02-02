@@ -1,10 +1,38 @@
 package GetFileInfo
 
+import (
+	"os"
+	"path"
+	"path/filepath"
+)
+
+type Info struct {
+	FullPath string // 文件的绝对路径
+	Size     int64  // 文件大小
+	FullName string // 文件名
+	ExtName  string // 扩展名
+	Dir      string // 所在目录
+}
+
+const (
+	MegaByte = 1000 * 1000 * 1000
+)
+
 /*
 获取单个文件信息
 */
-func GetFileInfo(path string) {
-
+func GetFileInfo(absPath string) Info {
+	mate, _ := os.Stat(absPath)
+	ext := path.Ext(absPath)
+	dir, file := filepath.Split(absPath)
+	i := Info{
+		FullPath: absPath,
+		Size:     mate.Size(),
+		FullName: file,
+		ExtName:  ext,
+		Dir:      dir,
+	}
+	return i
 }
 
 /*
