@@ -18,3 +18,8 @@ func TestGetVideoFileInfo(t *testing.T) {
 	ret := GetVideoFileInfo(absPath)
 	t.Logf("%+v\n", ret)
 }
+func TestGetAllVideoFileInfo(t *testing.T) {
+	absPath := "/Users/zen/Downloads/Telegram Desktop/Mass Effect"
+	ret := GetAllVideoFileInfo(absPath, "avi")
+	t.Logf("%+v\n", ret)
+}

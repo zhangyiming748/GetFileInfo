@@ -132,8 +132,80 @@ func GetVideoFileInfo(absPath string) Info {
 获取目录下符合条件的所有视频文件信息
 */
 func GetAllVideoFileInfo(dir, pattern string) []Info {
-	return nil
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		log.Debug.Printf("读取文件目录产生的错误:%v\n", err)
+	}
+	var aim []Info
+	if strings.Contains(pattern, ";") {
+		exts := strings.Split(pattern, ";")
+		for _, file := range files {
+			if strings.HasPrefix(file.Name(), ".") {
+				log.Info.Println("跳过隐藏文件", file.Name())
+				continue
+			}
+			ext := path.Ext(file.Name())
+			//log.Info.Printf("extname is %v\n", ext)
+			for _, ex := range exts {
+				if strings.Contains(ext, ex) {
+					//aim = append(aim, file.Name())
+					mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
+					Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
+					var frame int
+					go func() {
+						// 随缘计算帧数,没时间等
+						frame = detectFrame(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
+					}()
+					f := &Info{
+						FullPath: strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)),
+						Size:     mate.Size(),
+						FullName: file.Name(),
+						ExtName:  ext,
+						IsVideo:  true,
+						Code:     Code,
+						Width:    Width,
+						Height:   Height,
+						Frame:    frame,
+					}
+					aim = append(aim, *f)
+				}
+			}
+		}
+	} else {
+		for _, file := range files {
+			if strings.HasPrefix(file.Name(), ".") {
+				log.Info.Println("跳过隐藏文件", file.Name())
+				continue
+			}
+			ext := path.Ext(file.Name())
+			//log.Info.Printf("extname is %v\n", ext)
+			if strings.Contains(ext, pattern) {
+				//aim = append(aim, file.Name())
+				mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
+				Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
+				var frame int
+				go func() {
+					// 随缘计算帧数,没时间等
+					frame = detectFrame(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
+				}()
+				f := &Info{
+					FullPath: strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)),
+					Size:     mate.Size(),
+					FullName: file.Name(),
+					ExtName:  ext,
+					Code:     Code,
+					Width:    Width,
+					Height:   Height,
+					Frame:    frame,
+				}
+				aim = append(aim, *f)
+			}
+		}
+	}
+	log.Debug.Printf("有效的目标文件: %+v \n", aim)
+	return aim
 }
+
 func (i *Info) SetFrame(frame string) {
 	f, _ := strconv.Atoi(frame)
 	i.Frame = f
