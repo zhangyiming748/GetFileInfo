@@ -9,17 +9,17 @@ func TestGetFileInfo(t *testing.T) {
 }
 
 func TestGetAllFileInfo(t *testing.T) {
-	absPath := "/Users/zen/Downloads/Telegram Desktop/OverWatch"
+	absPath := ""
 	ret := GetAllFileInfo(absPath, "jpg")
 	t.Logf("%+v\n", ret)
 }
 func TestGetVideoFileInfo(t *testing.T) {
-	absPath := "/Users/zen/Downloads/Telegram Desktop/Mass Effect/HD liara (Miranda Lawson x Liara T'Soni) [1920 × 1080 - 60 FPS].mp4"
+	absPath := ""
 	ret := GetVideoFileInfo(absPath)
 	t.Logf("%+v\n", ret)
 }
 func TestGetAllVideoFileInfo(t *testing.T) {
-	absPath := "/Users/zen/Downloads/Telegram Desktop/Mass Effect"
+	absPath := ""
 	ret := GetAllVideoFileInfo(absPath, "avi")
 	t.Logf("%+v\n", ret)
 }
