@@ -99,7 +99,7 @@ func GetAllFileInfo(dir, pattern string) []Info {
 			}
 		}
 	}
-	log.Debug.Printf("有效的目标文件: %+v \n", aim)
+	// log.Debug.Printf("有效的目标文件: %+v \n", aim)
 	return aim
 }
 
@@ -202,7 +202,7 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 			}
 		}
 	}
-	log.Debug.Printf("有效的目标文件: %+v \n", aim)
+	// log.Debug.Printf("有效的目标文件: %+v \n", aim)
 	return aim
 }
 
