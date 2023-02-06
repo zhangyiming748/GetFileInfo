@@ -61,10 +61,11 @@ func GetAllFileInfo(dir, pattern string) []Info {
 				log.Info.Println("跳过隐藏文件", file.Name())
 				continue
 			}
-			ext := path.Ext(file.Name())
+			ext := path.Ext(file.Name())                 //文件扩展名
+			justExt := strings.Replace(ext, ".", "", -1) //去掉点
 			//log.Info.Printf("extname is %v\n", ext)
 			for _, ex := range exts {
-				if strings.Contains(ext, ex) {
+				if justExt == ex {
 					//aim = append(aim, file.Name())
 					mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 					f := &Info{
@@ -85,8 +86,9 @@ func GetAllFileInfo(dir, pattern string) []Info {
 				continue
 			}
 			ext := path.Ext(file.Name())
+			justExt := strings.Replace(ext, ".", "", -1)
 			//log.Info.Printf("extname is %v\n", ext)
-			if strings.Contains(ext, pattern) {
+			if justExt == pattern {
 				//aim = append(aim, file.Name())
 				mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 				f := &Info{
