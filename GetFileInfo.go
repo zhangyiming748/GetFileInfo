@@ -154,10 +154,6 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 					mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 					Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 					var frame int
-					go func() {
-						// 随缘计算帧数,没时间等
-						frame = detectFrame(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
-					}()
 					f := &Info{
 						FullPath: strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)),
 						Size:     mate.Size(),
