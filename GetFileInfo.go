@@ -122,7 +122,7 @@ func GetVideoFileInfo(absPath string) Info {
 		FullName: file,
 		ExtName:  ext,
 		IsVideo:  true,
-		Frame:    detectFrame(absPath),
+		Frame:    0,
 		Code:     Code,
 		Width:    Width,
 		Height:   Height,
@@ -185,11 +185,6 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 				//aim = append(aim, file.Name())
 				mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 				Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
-				var frame int
-				go func() {
-					// 随缘计算帧数,没时间等
-					frame = detectFrame(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
-				}()
 				f := &Info{
 					FullPath: strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)),
 					Size:     mate.Size(),
@@ -198,7 +193,7 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 					Code:     Code,
 					Width:    Width,
 					Height:   Height,
-					Frame:    frame,
+					Frame:    0,
 				}
 				aim = append(aim, *f)
 			}
@@ -211,5 +206,13 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 func (i *Info) SetFrame(frame string) {
 	f, _ := strconv.Atoi(frame)
 	i.Frame = f
+	return
+}
+
+/*
+视频文件的帧数有需要的情况下单独计算,默认为空
+*/
+func CountFrame(i *Info) {
+	i.Frame = detectFrame(i.FullPath)
 	return
 }
