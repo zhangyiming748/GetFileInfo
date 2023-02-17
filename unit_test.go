@@ -23,3 +23,7 @@ func TestGetAllVideoFileInfo(t *testing.T) {
 	ret := GetAllVideoFileInfo(absPath, "avi")
 	t.Logf("%+v\n", ret)
 }
+func TestMoveOutOffFHD(t *testing.T) {
+	absPath := "/Volumes/T7/slacking/Telegram/Frozen/Elsa/h265"
+	MoveOutOffFHD(absPath, "mp4")
+}

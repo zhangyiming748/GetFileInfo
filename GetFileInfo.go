@@ -240,7 +240,7 @@ func MoveOutOffFHD(dir, pattern string) {
 	for _, file := range files {
 		src := file.FullPath
 		dst := strings.Join([]string{target, file.FullName}, string(os.PathSeparator))
-		cmd := strings.Join([]string{"mv", src, dst}, "")
+		cmd := strings.Join([]string{"mv", src, dst}, " ")
 		log.Debug.Printf("生成的单条命令:%s\n", cmd)
 		solve.WriteString(cmd)
 		solve.WriteString("\n")
