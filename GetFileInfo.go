@@ -212,3 +212,37 @@ func CountFrame(i *Info) {
 	i.Frame = detectFrame(i.FullPath)
 	return
 }
+
+/*
+获取全部超过1080P的视频
+*/
+func GetOutOffFHD(dir, pattern string) (bigger []Info) {
+	sum := 0
+	infos := GetAllVideoFileInfo(dir, pattern)
+	for _, info := range infos {
+		if info.Width > 1920 || info.Height > 1920 {
+			bigger = append(bigger, info)
+			sum++
+		}
+	}
+	log.Debug.Printf("共找到%d个大于FHD的视频\n", sum)
+	return
+}
+func MoveOutOffFHD(dir, pattern string) {
+	target := strings.Join([]string{dir, "bigger"}, string(os.PathSeparator))
+	os.Mkdir(target, 0777)
+	files := GetOutOffFHD(dir, pattern)
+	solve, err := os.OpenFile("solve.sh", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
+	defer solve.Close()
+	if err != nil {
+		return
+	}
+	for _, file := range files {
+		src := file.FullPath
+		dst := strings.Join([]string{target, file.FullName}, string(os.PathSeparator))
+		cmd := strings.Join([]string{"mv", src, dst}, "")
+		log.Debug.Printf("生成的单条命令:%s\n", cmd)
+		solve.WriteString(cmd)
+		solve.WriteString("\n")
+	}
+}
