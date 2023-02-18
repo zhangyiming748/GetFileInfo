@@ -1,5 +1,9 @@
 package GetFileInfo
 
+import (
+	"github.com/zhangyiming748/pretty"
+)
+
 import "testing"
 
 func TestGetFileInfo(t *testing.T) {
@@ -26,4 +30,9 @@ func TestGetAllVideoFileInfo(t *testing.T) {
 func TestMoveOutOffFHD(t *testing.T) {
 	absPath := "/Volumes/T7/slacking/Telegram/Frozen/Elsa/h265"
 	MoveOutOffFHD(absPath, "mp4")
+}
+func TestGetH265VideoFile(t *testing.T) {
+	dir := "/Users/zen/Movies"
+	ret := GetH265VideoFile(dir, "mp4")
+	pretty.P(ret)
 }

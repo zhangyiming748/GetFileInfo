@@ -186,6 +186,7 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 					Size:     mate.Size(),
 					FullName: file.Name(),
 					ExtName:  ext,
+					IsVideo:  true,
 					Code:     Code,
 					Width:    Width,
 					Height:   Height,
@@ -245,4 +246,20 @@ func MoveOutOffFHD(dir, pattern string) {
 		solve.WriteString(cmd)
 		solve.WriteString("\n")
 	}
+}
+
+/*
+获取全部非h265编码的视频
+*/
+func GetH265VideoFile(dir, pattern string) (h264 []Info) {
+	sum := 0
+	infos := GetAllVideoFileInfo(dir, pattern)
+	for _, info := range infos {
+		if info.Code != "HEVC" {
+			sum++
+			h264 = append(h264, info)
+		}
+	}
+	log.Debug.Printf("共找到%d个非h265的视频\n", sum)
+	return
 }
