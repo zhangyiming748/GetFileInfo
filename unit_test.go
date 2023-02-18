@@ -1,6 +1,7 @@
 package GetFileInfo
 
 import (
+	"github.com/zhangyiming748/GetAllFolder"
 	"github.com/zhangyiming748/pretty"
 )
 
@@ -33,6 +34,10 @@ func TestMoveOutOffFHD(t *testing.T) {
 }
 func TestGetH265VideoFile(t *testing.T) {
 	dir := "/Users/zen/Movies"
-	ret := GetH265VideoFile(dir, "mp4")
-	pretty.P(ret)
+	folders := GetAllFolder.ListFolders(dir)
+	for _, folder := range folders {
+		ret := GetH265VideoFile(folder, "mp4")
+		pretty.P(ret)
+	}
+
 }
