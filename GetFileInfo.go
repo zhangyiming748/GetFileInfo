@@ -1,10 +1,12 @@
 package GetFileInfo
 
 import (
+	"github.com/zhangyiming748/GetAllFolder"
 	"github.com/zhangyiming748/log"
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -147,9 +149,10 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 				continue
 			}
 			ext := path.Ext(file.Name())
+			justExt := strings.Replace(ext, ".", "", -1)
 			//log.Info.Printf("extname is %v\n", ext)
 			for _, ex := range exts {
-				if strings.Contains(ext, ex) {
+				if justExt == ex {
 					//aim = append(aim, file.Name())
 					mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 					Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
@@ -176,8 +179,9 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 				continue
 			}
 			ext := path.Ext(file.Name())
+			justExt := strings.Replace(ext, ".", "", -1)
 			//log.Info.Printf("extname is %v\n", ext)
-			if strings.Contains(ext, pattern) {
+			if justExt == pattern {
 				//aim = append(aim, file.Name())
 				mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 				Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
@@ -239,12 +243,20 @@ func MoveOutOffFHD(dir, pattern string) {
 		return
 	}
 	for _, file := range files {
-		src := file.FullPath
+		src := strings.Join([]string{"\"", file.FullPath, "\""}, "")
 		dst := strings.Join([]string{target, file.FullName}, string(os.PathSeparator))
+		dst = strings.Join([]string{"\"", dst, "\""}, "")
 		cmd := strings.Join([]string{"mv", src, dst}, " ")
 		log.Debug.Printf("生成的单条命令:%s\n", cmd)
 		solve.WriteString(cmd)
 		solve.WriteString("\n")
+	}
+}
+func MoveAllOutOffFHD(root, pattern string) {
+	folders := GetAllFolder.ListFolders(root)
+	for _, folder := range folders {
+		MoveOutOffFHD(folder, pattern)
+		runtime.GC()
 	}
 }
 

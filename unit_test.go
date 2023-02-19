@@ -41,3 +41,8 @@ func TestGetH265VideoFile(t *testing.T) {
 	}
 
 }
+func TestMoveAllOutOffFHD(t *testing.T) {
+	root := "/Volumes/T7/slacking/Telegram"
+	pattern := "webm;mkv;m4v;MP4;mp4;mov;avi;wmv;ts;TS;rmvb"
+	MoveAllOutOffFHD(root, pattern)
+}
