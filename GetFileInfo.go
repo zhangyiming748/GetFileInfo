@@ -263,7 +263,7 @@ func MoveAllOutOffFHD(root, pattern string) {
 /*
 获取全部非h265编码的视频
 */
-func GetH265VideoFile(dir, pattern string) (h264 []Info) {
+func GetNotH265VideoFile(dir, pattern string) (h264 []Info) {
 	sum := 0
 	infos := GetAllVideoFileInfo(dir, pattern)
 	for _, info := range infos {
@@ -274,4 +274,38 @@ func GetH265VideoFile(dir, pattern string) (h264 []Info) {
 	}
 	log.Debug.Printf("共找到%d个非h265的视频\n", sum)
 	return
+}
+
+/*
+获取全部文件夹中非h265编码的视频
+*/
+func GetAllNotH265VideoFile(root, pattern string) (h264 []Info) {
+	sum := 0
+	folders := GetAllFolder.ListFolders(root)
+	for _, folder := range folders {
+		infos := GetNotH265VideoFile(folder, pattern)
+		h264 = append(h264, infos...)
+		sum++
+	}
+	log.Debug.Printf("共排查%d个文件夹\n", sum)
+	return
+}
+
+func GetAllNotH265VideoFileReport(root, pattern string) {
+	sum := 0
+	var h264 []Info
+	folders := GetAllFolder.ListFolders(root)
+	for _, folder := range folders {
+		infos := GetNotH265VideoFile(folder, pattern)
+		h264 = append(h264, infos...)
+		sum++
+	}
+	log.Debug.Printf("共排查%d个文件夹\n", sum)
+	file, err := os.OpenFile("h264Report.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
+	if err != nil {
+		return
+	}
+	for _, v := range h264 {
+		file.WriteString(strings.Join([]string{"\"", v.FullPath, "\"", "\n"}, ""))
+	}
 }

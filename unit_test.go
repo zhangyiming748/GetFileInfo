@@ -32,11 +32,11 @@ func TestMoveOutOffFHD(t *testing.T) {
 	absPath := "/Volumes/T7/slacking/Telegram/Frozen/Elsa/h265"
 	MoveOutOffFHD(absPath, "mp4")
 }
-func TestGetH265VideoFile(t *testing.T) {
+func TestGetNotH265VideoFile(t *testing.T) {
 	dir := "/Users/zen/Movies"
 	folders := GetAllFolder.ListFolders(dir)
 	for _, folder := range folders {
-		ret := GetH265VideoFile(folder, "mp4")
+		ret := GetNotH265VideoFile(folder, "mp4")
 		pretty.P(ret)
 	}
 
@@ -45,4 +45,10 @@ func TestMoveAllOutOffFHD(t *testing.T) {
 	root := "/Volumes/T7/slacking"
 	pattern := "webm;mkv;m4v;MP4;mp4;mov;avi;wmv;ts;TS;rmvb"
 	MoveAllOutOffFHD(root, pattern)
+}
+func TestGetAllNotH265VideoFile(t *testing.T) {
+	root := "/Volumes/T7/slacking/Telegram/DOA"
+	pattern := "webm;mkv;m4v;MP4;mp4;mov;avi;wmv;ts;TS;rmvb"
+	GetAllNotH265VideoFileReport(root, pattern)
+
 }
