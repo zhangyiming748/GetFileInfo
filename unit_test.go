@@ -52,3 +52,9 @@ func TestGetAllNotH265VideoFile(t *testing.T) {
 	GetAllNotH265VideoFileReport(root, pattern)
 
 }
+
+func TestGetAllOutOffFHDVideoFileReport(t *testing.T) {
+	root := "/Volumes/T7/slacking/Telegram"
+	pattern := "webm;mkv;m4v;MP4;mp4;mov;avi;wmv;ts;TS;rmvb"
+	GetAllOutOffFHDVideoFileReport(root, pattern)
+}

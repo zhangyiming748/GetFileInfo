@@ -225,13 +225,31 @@ func GetOutOffFHD(dir, pattern string) (bigger []Info) {
 	sum := 0
 	infos := GetAllVideoFileInfo(dir, pattern)
 	for _, info := range infos {
-		if info.Width > 1920 || info.Height > 1920 {
+		if info.Width > 1920 && info.Height > 1920 {
 			bigger = append(bigger, info)
 			sum++
 		}
 	}
 	log.Debug.Printf("共找到%d个大于FHD的视频\n", sum)
 	return
+}
+func GetAllOutOffFHDVideoFileReport(root, pattern string) {
+	sum := 0
+	var fhd []Info
+	folders := GetAllFolder.ListFolders(root)
+	for _, folder := range folders {
+		infos := GetOutOffFHD(folder, pattern)
+		fhd = append(fhd, infos...)
+		sum++
+	}
+	log.Debug.Printf("共排查%d个文件夹\n", sum)
+	file, err := os.OpenFile("fhdReport.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
+	if err != nil {
+		return
+	}
+	for _, v := range fhd {
+		file.WriteString(strings.Join([]string{"\"", v.FullPath, "\",", "\n"}, ""))
+	}
 }
 func MoveOutOffFHD(dir, pattern string) {
 	target := strings.Join([]string{dir, "bigger"}, string(os.PathSeparator))
