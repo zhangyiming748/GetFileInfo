@@ -3,10 +3,10 @@ package GetFileInfo
 import (
 	"github.com/zhangyiming748/GetAllFolder"
 	"github.com/zhangyiming748/log"
+	"github.com/zhangyiming748/pretty"
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 )
@@ -44,6 +44,7 @@ func GetFileInfo(absPath string) Info {
 		ExtName:  ext,
 		IsVideo:  false,
 	}
+	pretty.P(i)
 	return i
 }
 
@@ -104,6 +105,7 @@ func GetAllFileInfo(dir, pattern string) []Info {
 		}
 	}
 	// log.Debug.Printf("有效的目标文件: %+v \n", aim)
+	pretty.P(aim)
 	return aim
 }
 
@@ -129,6 +131,7 @@ func GetVideoFileInfo(absPath string) Info {
 		Width:    Width,
 		Height:   Height,
 	}
+	pretty.P(i)
 	return i
 }
 
@@ -201,6 +204,7 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 		}
 	}
 	// log.Debug.Printf("有效的目标文件: %+v \n", aim)
+	pretty.P(aim)
 	return aim
 }
 
@@ -231,8 +235,13 @@ func GetOutOffFHD(dir, pattern string) (bigger []Info) {
 		}
 	}
 	log.Debug.Printf("共找到%d个大于FHD的视频\n", sum)
+	pretty.P(bigger)
 	return
 }
+
+/*
+获取全部超过1080P的视频并生成报告
+*/
 func GetAllOutOffFHDVideoFileReport(root, pattern string) {
 	sum := 0
 	var fhd []Info
@@ -251,32 +260,6 @@ func GetAllOutOffFHDVideoFileReport(root, pattern string) {
 		file.WriteString(strings.Join([]string{"\"", v.FullPath, "\",", "\n"}, ""))
 	}
 }
-func MoveOutOffFHD(dir, pattern string) {
-	target := strings.Join([]string{dir, "bigger"}, string(os.PathSeparator))
-	os.Mkdir(target, 0777)
-	files := GetOutOffFHD(dir, pattern)
-	solve, err := os.OpenFile("solve.sh", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
-	defer solve.Close()
-	if err != nil {
-		return
-	}
-	for _, file := range files {
-		src := strings.Join([]string{"\"", file.FullPath, "\""}, "")
-		dst := strings.Join([]string{target, file.FullName}, string(os.PathSeparator))
-		dst = strings.Join([]string{"\"", dst, "\""}, "")
-		cmd := strings.Join([]string{"mv", src, dst}, " ")
-		log.Debug.Printf("生成的单条命令:%s\n", cmd)
-		solve.WriteString(cmd)
-		solve.WriteString("\n")
-	}
-}
-func MoveAllOutOffFHD(root, pattern string) {
-	folders := GetAllFolder.ListFolders(root)
-	for _, folder := range folders {
-		MoveOutOffFHD(folder, pattern)
-		runtime.GC()
-	}
-}
 
 /*
 获取全部非h265编码的视频
@@ -291,6 +274,7 @@ func GetNotH265VideoFile(dir, pattern string) (h264 []Info) {
 		}
 	}
 	log.Debug.Printf("共找到%d个非h265的视频\n", sum)
+	pretty.P(h264)
 	return
 }
 
@@ -306,9 +290,13 @@ func GetAllNotH265VideoFile(root, pattern string) (h264 []Info) {
 		sum++
 	}
 	log.Debug.Printf("共排查%d个文件夹\n", sum)
+	pretty.P(h264)
 	return
 }
 
+/*
+获取全部非h265编码视频并生成报告
+*/
 func GetAllNotH265VideoFileReport(root, pattern string) {
 	sum := 0
 	var h264 []Info
