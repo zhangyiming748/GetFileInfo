@@ -208,6 +208,52 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 	return aim
 }
 
+/*
+获取全部目录下符合条件的所有视频文件信息并生成报告
+*/
+type VideoReport struct {
+	ref           string //文件名
+	FileExtension string //扩展名
+	container     string //容器
+	VideoFormat   string //视频编码格式
+	Width         string //视频宽度
+	Height        string //视频高度
+	AudioFormat   string //音频编码格式
+}
+
+func GetAllVideoFilesInfoReport(root, pattern string) {
+	md, err := os.OpenFile("report.md", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
+	if err != nil {
+		log.Warn.Panicf("写报告文件出错:%v\n", err)
+	}
+	title := strings.Join([]string{"|文件名", "扩展名", "容器", "视频编码格式", "视频宽度", "视频高度", "音频编码格式|\n"}, "|")
+	md.WriteString(title)
+	perfix := "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n"
+	md.WriteString(perfix)
+	folders := GetAllFolder.ListFolders(root)
+	for _, folder := range folders {
+		files := GetAllFileInfo(folder, pattern)
+		var vr VideoReport
+		for _, file := range files {
+			j := getGeneralMediaInfo(file.FullPath)
+			vr.ref = j.Media.Ref
+			for _, track := range j.Media.Track {
+				switch track.Type {
+				case "General":
+					vr.FileExtension = track.FileExtension
+					vr.container = track.Format
+				case "Video":
+					vr.VideoFormat = track.Format
+					vr.Width = track.Width
+					vr.Height = track.Height
+				case "Audio":
+					vr.AudioFormat = track.Format
+				}
+			}
+			md.WriteString(strings.Join([]string{"|", vr.ref, "|", vr.FileExtension, "|", vr.container, "|", vr.VideoFormat, "|", vr.Width, "|", vr.Height, "|", vr.AudioFormat, "|\n"}, ""))
+		}
+	}
+}
 func (i *Info) SetFrame(frame string) {
 	f, _ := strconv.Atoi(frame)
 	i.Frame = f

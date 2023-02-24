@@ -83,6 +83,36 @@ type MediaInfo struct {
 	} `json:"media"`
 }
 
+func getGeneralMediaInfo(absPath string) MediaInfo {
+	var mi MediaInfo
+	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
+	log.Debug.Printf("生成的命令是:%s\n", cmd)
+	stdout, err := cmd.StdoutPipe()
+	cmd.Stderr = cmd.Stdout
+	if err != nil {
+		log.Warn.Panicf("cmd.StdoutPipe产生的错误:%v\n", err)
+	}
+	if err = cmd.Start(); err != nil {
+		log.Warn.Panicf("cmd.Run产生的错误:%v\n", err)
+	}
+
+	//读取所有输出
+	bytes, err := io.ReadAll(stdout)
+	if err != nil {
+		log.Warn.Panicf("ReadAll Stdout:%v\n", err)
+
+	} else {
+		//log.Debug.Printf("命令输出内容:%v\n", string(bytes))
+		if err := json.Unmarshal(bytes, &mi); err != nil {
+			log.Warn.Panicf("解析json错误:%v\n", err)
+		}
+	}
+
+	if err = cmd.Wait(); err != nil {
+		log.Warn.Panicf("命令执行中有错误产生:%v\n", err)
+	}
+	return mi
+}
 func getMediaInfo(absPath string) (Code string, Width, Height int) {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")

@@ -28,10 +28,7 @@ func TestGetAllVideoFileInfo(t *testing.T) {
 	ret := GetAllVideoFileInfo(absPath, "avi")
 	t.Logf("%+v\n", ret)
 }
-func TestMoveOutOffFHD(t *testing.T) {
-	absPath := "/Volumes/T7/slacking/Telegram/Frozen/Elsa/h265"
-	MoveOutOffFHD(absPath, "mp4")
-}
+
 func TestGetNotH265VideoFile(t *testing.T) {
 	dir := "/Users/zen/Movies"
 	folders := GetAllFolder.ListFolders(dir)
@@ -41,11 +38,7 @@ func TestGetNotH265VideoFile(t *testing.T) {
 	}
 
 }
-func TestMoveAllOutOffFHD(t *testing.T) {
-	root := "/Volumes/T7/slacking"
-	pattern := "webm;mkv;m4v;MP4;mp4;mov;avi;wmv;ts;TS;rmvb"
-	MoveAllOutOffFHD(root, pattern)
-}
+
 func TestGetAllNotH265VideoFile(t *testing.T) {
 	root := "/Volumes/T7/slacking/Telegram/DOA"
 	pattern := "webm;mkv;m4v;MP4;mp4;mov;avi;wmv;ts;TS;rmvb"
@@ -57,4 +50,13 @@ func TestGetAllOutOffFHDVideoFileReport(t *testing.T) {
 	root := "/Volumes/T7/slacking/Telegram"
 	pattern := "webm;mkv;m4v;MP4;mp4;mov;avi;wmv;ts;TS;rmvb"
 	GetAllOutOffFHDVideoFileReport(root, pattern)
+}
+func TestGetGeneralMediaInfo(t *testing.T) {
+	ret := getGeneralMediaInfo("/Users/zen/Downloads/整理/live/5_6086967526091131008.mp4")
+	pretty.P(ret)
+}
+func TestGetAllVideoFilesInfoReport(t *testing.T) {
+	root := "/Users/zen/Downloads/整理"
+	pattern := "mp4"
+	GetAllVideoFilesInfoReport(root, pattern)
 }
