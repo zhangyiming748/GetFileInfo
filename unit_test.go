@@ -14,8 +14,8 @@ func TestGetFileInfo(t *testing.T) {
 }
 
 func TestGetAllFileInfo(t *testing.T) {
-	absPath := ""
-	ret := GetAllFileInfo(absPath, "jpg")
+	absPath := "D:\\甄嬛传\\h264"
+	ret := GetAllFileInfo(absPath, "mp4")
 	t.Logf("%+v\n", ret)
 }
 func TestGetVideoFileInfo(t *testing.T) {
