@@ -1,7 +1,9 @@
 package GetFileInfo
 
 import (
+	"github.com/zhangyiming748/GetAllFolder"
 	"github.com/zhangyiming748/log"
+	"github.com/zhangyiming748/pretty"
 	"os"
 	"path"
 	"path/filepath"
@@ -42,6 +44,7 @@ func GetFileInfo(absPath string) Info {
 		ExtName:  ext,
 		IsVideo:  false,
 	}
+	pretty.P(i)
 	return i
 }
 
@@ -102,6 +105,7 @@ func GetAllFileInfo(dir, pattern string) []Info {
 		}
 	}
 	// log.Debug.Printf("有效的目标文件: %+v \n", aim)
+	pretty.P(aim)
 	return aim
 }
 
@@ -127,6 +131,7 @@ func GetVideoFileInfo(absPath string) Info {
 		Width:    Width,
 		Height:   Height,
 	}
+	pretty.P(i)
 	return i
 }
 
@@ -147,9 +152,10 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 				continue
 			}
 			ext := path.Ext(file.Name())
+			justExt := strings.Replace(ext, ".", "", -1)
 			//log.Info.Printf("extname is %v\n", ext)
 			for _, ex := range exts {
-				if strings.Contains(ext, ex) {
+				if justExt == ex {
 					//aim = append(aim, file.Name())
 					mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 					Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
@@ -176,8 +182,9 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 				continue
 			}
 			ext := path.Ext(file.Name())
+			justExt := strings.Replace(ext, ".", "", -1)
 			//log.Info.Printf("extname is %v\n", ext)
-			if strings.Contains(ext, pattern) {
+			if justExt == pattern {
 				//aim = append(aim, file.Name())
 				mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 				Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
@@ -186,6 +193,7 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 					Size:     mate.Size(),
 					FullName: file.Name(),
 					ExtName:  ext,
+					IsVideo:  true,
 					Code:     Code,
 					Width:    Width,
 					Height:   Height,
@@ -196,9 +204,56 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 		}
 	}
 	// log.Debug.Printf("有效的目标文件: %+v \n", aim)
+	pretty.P(aim)
 	return aim
 }
 
+/*
+获取全部目录下符合条件的所有视频文件信息并生成报告
+*/
+type VideoReport struct {
+	ref           string //文件名
+	FileExtension string //扩展名
+	container     string //容器
+	VideoFormat   string //视频编码格式
+	Width         string //视频宽度
+	Height        string //视频高度
+	AudioFormat   string //音频编码格式
+}
+
+func GetAllVideoFilesInfoReport(root, pattern string) {
+	md, err := os.OpenFile("report.md", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
+	if err != nil {
+		log.Warn.Panicf("写报告文件出错:%v\n", err)
+	}
+	title := strings.Join([]string{"|文件名", "扩展名", "容器", "视频编码格式", "视频宽度", "视频高度", "音频编码格式|\n"}, "|")
+	md.WriteString(title)
+	perfix := "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n"
+	md.WriteString(perfix)
+	folders := GetAllFolder.ListFolders(root)
+	for _, folder := range folders {
+		files := GetAllFileInfo(folder, pattern)
+		var vr VideoReport
+		for _, file := range files {
+			j := getGeneralMediaInfo(file.FullPath)
+			vr.ref = j.Media.Ref
+			for _, track := range j.Media.Track {
+				switch track.Type {
+				case "General":
+					vr.FileExtension = track.FileExtension
+					vr.container = track.Format
+				case "Video":
+					vr.VideoFormat = track.Format
+					vr.Width = track.Width
+					vr.Height = track.Height
+				case "Audio":
+					vr.AudioFormat = track.Format
+				}
+			}
+			md.WriteString(strings.Join([]string{"|", vr.ref, "|", vr.FileExtension, "|", vr.container, "|", vr.VideoFormat, "|", vr.Width, "|", vr.Height, "|", vr.AudioFormat, "|\n"}, ""))
+		}
+	}
+}
 func (i *Info) SetFrame(frame string) {
 	f, _ := strconv.Atoi(frame)
 	i.Frame = f
@@ -220,29 +275,89 @@ func GetOutOffFHD(dir, pattern string) (bigger []Info) {
 	sum := 0
 	infos := GetAllVideoFileInfo(dir, pattern)
 	for _, info := range infos {
-		if info.Width > 1920 || info.Height > 1920 {
+		if info.Width > 1920 && info.Height > 1920 {
 			bigger = append(bigger, info)
 			sum++
 		}
 	}
 	log.Debug.Printf("共找到%d个大于FHD的视频\n", sum)
+	pretty.P(bigger)
 	return
 }
-func MoveOutOffFHD(dir, pattern string) {
-	target := strings.Join([]string{dir, "bigger"}, string(os.PathSeparator))
-	os.Mkdir(target, 0777)
-	files := GetOutOffFHD(dir, pattern)
-	solve, err := os.OpenFile("solve.sh", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
-	defer solve.Close()
+
+/*
+获取全部超过1080P的视频并生成报告
+*/
+func GetAllOutOffFHDVideoFileReport(root, pattern string) {
+	sum := 0
+	var fhd []Info
+	folders := GetAllFolder.ListFolders(root)
+	for _, folder := range folders {
+		infos := GetOutOffFHD(folder, pattern)
+		fhd = append(fhd, infos...)
+		sum++
+	}
+	log.Debug.Printf("共排查%d个文件夹\n", sum)
+	file, err := os.OpenFile("fhdReport.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
 	if err != nil {
 		return
 	}
-	for _, file := range files {
-		src := file.FullPath
-		dst := strings.Join([]string{target, file.FullName}, string(os.PathSeparator))
-		cmd := strings.Join([]string{"mv", src, dst}, " ")
-		log.Debug.Printf("生成的单条命令:%s\n", cmd)
-		solve.WriteString(cmd)
-		solve.WriteString("\n")
+	for _, v := range fhd {
+		file.WriteString(strings.Join([]string{"\"", v.FullPath, "\",", "\n"}, ""))
+	}
+}
+
+/*
+获取全部非h265编码的视频
+*/
+func GetNotH265VideoFile(dir, pattern string) (h264 []Info) {
+	sum := 0
+	infos := GetAllVideoFileInfo(dir, pattern)
+	for _, info := range infos {
+		if info.Code != "HEVC" {
+			sum++
+			h264 = append(h264, info)
+		}
+	}
+	log.Debug.Printf("共找到%d个非h265的视频\n", sum)
+	pretty.P(h264)
+	return
+}
+
+/*
+获取全部文件夹中非h265编码的视频
+*/
+func GetAllNotH265VideoFile(root, pattern string) (h264 []Info) {
+	sum := 0
+	folders := GetAllFolder.ListFolders(root)
+	for _, folder := range folders {
+		infos := GetNotH265VideoFile(folder, pattern)
+		h264 = append(h264, infos...)
+		sum++
+	}
+	log.Debug.Printf("共排查%d个文件夹\n", sum)
+	pretty.P(h264)
+	return
+}
+
+/*
+获取全部非h265编码视频并生成报告
+*/
+func GetAllNotH265VideoFileReport(root, pattern string) {
+	sum := 0
+	var h264 []Info
+	folders := GetAllFolder.ListFolders(root)
+	for _, folder := range folders {
+		infos := GetNotH265VideoFile(folder, pattern)
+		h264 = append(h264, infos...)
+		sum++
+	}
+	log.Debug.Printf("共排查%d个文件夹\n", sum)
+	file, err := os.OpenFile("h264Report.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
+	if err != nil {
+		return
+	}
+	for _, v := range h264 {
+		file.WriteString(strings.Join([]string{"\"", v.FullPath, "\"", "\n"}, ""))
 	}
 }
