@@ -86,7 +86,7 @@ type MediaInfo struct {
 func getMediaInfo(absPath string) (Code string, Width, Height int) {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
-	log.Debug.Printf("生成的命令是:%s\n", cmd)
+	log.Info.Printf("生成的命令是:%s\n", cmd)
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
@@ -135,7 +135,7 @@ func detectFrame(absPath string) int {
 		> -show_entries stream = nb_read_frames :只显示读取的帧数.
 		> -of default = nokey = 1:noprint_wrappers = 1 :将输出格式(也称为"writer")设置为默认值,不打印每个字段的键(nokey = 1),不打印节头和页脚(noprint_wrappers = 1).
 	*/
-	log.Debug.Printf("生成的命令是:%s\n", cmd)
+	log.Info.Printf("生成的命令是:%s\n", cmd)
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
@@ -168,7 +168,7 @@ func detectFrameWithWaitGroup(absPath string, wg *sync.WaitGroup) int {
 		> -show_entries stream = nb_read_frames :只显示读取的帧数.
 		> -of default = nokey = 1:noprint_wrappers = 1 :将输出格式(也称为"writer")设置为默认值,不打印每个字段的键(nokey = 1),不打印节头和页脚(noprint_wrappers = 1).
 	*/
-	log.Debug.Printf("生成的命令是:%s\n", cmd)
+	log.Info.Printf("生成的命令是:%s\n", cmd)
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
