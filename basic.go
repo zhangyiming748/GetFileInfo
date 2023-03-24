@@ -72,10 +72,10 @@ func GetAllFileInfo(dir, pattern string) []Info {
 			if runtime.GOOS == "windows" {
 				fullPath = strings.Join([]string{"\"", fullPath, "\""}, "")
 			}
-			mate, _ := os.Stat(fullPath)
+			//mate, _ := os.Stat(fullPath)
 			f := &Info{
 				FullPath: fullPath,
-				Size:     mate.Size(),
+				//Size:     mate.Size(),
 				FullName: file.Name(),
 				ExtName:  currentExt,
 			}
