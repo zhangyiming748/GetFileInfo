@@ -1,12 +1,11 @@
 package GetFileInfo
 
 import (
-	"fmt"
 	"github.com/zhangyiming748/log"
-	"github.com/zhangyiming748/pretty"
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -43,7 +42,6 @@ func GetFileInfo(absPath string) Info {
 		ExtName:  ext,
 		IsVideo:  false,
 	}
-	pretty.P(i)
 	return i
 }
 
@@ -69,9 +67,11 @@ func GetAllFileInfo(dir, pattern string) []Info {
 		}
 		currentExt := path.Ext(file.Name()) //当前文件的扩展名
 		currentExt = strings.Replace(currentExt, ".", "", -1)
-		fmt.Printf("current:%v\n", currentExt)
 		if In(currentExt, strings.Split(pattern, ";")) {
 			fullPath := strings.Join([]string{dir, file.Name()}, string(os.PathSeparator))
+			if runtime.GOOS == "windows" {
+				fullPath = strings.Join([]string{"\"", fullPath, "\""}, "")
+			}
 			mate, _ := os.Stat(fullPath)
 			f := &Info{
 				FullPath: fullPath,
