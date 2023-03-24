@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/zhangyiming748/GetAllFolder v0.0.5
-	github.com/zhangyiming748/log v0.0.5
+	github.com/zhangyiming748/log v0.0.6
 	github.com/zhangyiming748/pretty v0.0.3
 	github.com/zhangyiming748/replace v0.0.5
 )
