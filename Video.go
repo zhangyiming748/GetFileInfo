@@ -3,111 +3,12 @@ package GetFileInfo
 import (
 	"github.com/zhangyiming748/GetAllFolder"
 	"github.com/zhangyiming748/log"
-	"github.com/zhangyiming748/pretty"
 	"os"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 )
-
-type Info struct {
-	FullPath string // 文件的绝对路径
-	Size     int64  // 文件大小
-	FullName string // 文件名
-	ExtName  string // 扩展名
-	IsVideo  bool   // 是否为视频文件
-	Frame    int    // 视频帧数
-	Width    int    // 视频宽度
-	Height   int    // 视频高度
-	Code     string // 视频编码
-}
-
-const (
-	MegaByte = 1000 * 1000 * 1000
-)
-
-/*
-获取单个文件信息
-*/
-func GetFileInfo(absPath string) Info {
-	mate, err := os.Stat(absPath)
-	if err != nil {
-		log.Warn.Printf("获取文件 %v 元数据发生错误 %v\n", absPath, err)
-	}
-	ext := path.Ext(absPath)
-	_, file := filepath.Split(absPath)
-	i := Info{
-		FullPath: absPath,
-		Size:     mate.Size(),
-		FullName: file,
-		ExtName:  ext,
-		IsVideo:  false,
-	}
-	pretty.P(i)
-	return i
-}
-
-/*
-获取目录下符合条件的所有文件信息
-*/
-func GetAllFileInfo(dir, pattern string) []Info {
-	files, err := os.ReadDir(dir)
-	if err != nil {
-		log.Debug.Printf("读取文件目录产生的错误:%v\n", err)
-	}
-	var aim []Info
-	if strings.Contains(pattern, ";") {
-		exts := strings.Split(pattern, ";")
-		for _, file := range files {
-			if strings.HasPrefix(file.Name(), ".") {
-				log.Info.Println("跳过隐藏文件", file.Name())
-				continue
-			}
-			ext := path.Ext(file.Name())                 //文件扩展名
-			justExt := strings.Replace(ext, ".", "", -1) //去掉点
-			//log.Info.Printf("extname is %v\n", ext)
-			for _, ex := range exts {
-				if justExt == ex {
-					//aim = append(aim, file.Name())
-					mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
-					f := &Info{
-						FullPath: strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)),
-						Size:     mate.Size(),
-						FullName: file.Name(),
-						ExtName:  ext,
-						IsVideo:  false,
-					}
-					aim = append(aim, *f)
-				}
-			}
-		}
-	} else {
-		for _, file := range files {
-			if strings.HasPrefix(file.Name(), ".") {
-				log.Info.Println("跳过隐藏文件", file.Name())
-				continue
-			}
-			ext := path.Ext(file.Name())
-			justExt := strings.Replace(ext, ".", "", -1)
-			//log.Info.Printf("extname is %v\n", ext)
-			if justExt == pattern {
-				//aim = append(aim, file.Name())
-				mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
-				f := &Info{
-					FullPath: strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)),
-					Size:     mate.Size(),
-					FullName: file.Name(),
-					ExtName:  ext,
-				}
-				aim = append(aim, *f)
-			}
-		}
-	}
-	// log.Debug.Printf("有效的目标文件: %+v \n", aim)
-	pretty.P(aim)
-	return aim
-}
 
 /*
 获取单个视频文件信息
@@ -131,7 +32,6 @@ func GetVideoFileInfo(absPath string) Info {
 		Width:    Width,
 		Height:   Height,
 	}
-	pretty.P(i)
 	return i
 }
 
@@ -203,8 +103,6 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 			}
 		}
 	}
-	// log.Debug.Printf("有效的目标文件: %+v \n", aim)
-	pretty.P(aim)
 	return aim
 }
 
@@ -221,6 +119,9 @@ type VideoReport struct {
 	AudioFormat   string //音频编码格式
 }
 
+/*
+获取视频文件信息并生成报告
+*/
 func GetAllVideoFilesInfoReport(root, pattern string) {
 	md, err := os.OpenFile("report.md", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
 	if err != nil {
@@ -281,7 +182,6 @@ func GetOutOffFHD(dir, pattern string) (bigger []Info) {
 		}
 	}
 	log.Debug.Printf("共找到%d个大于FHD的视频\n", sum)
-	pretty.P(bigger)
 	return
 }
 
@@ -320,7 +220,6 @@ func GetNotH265VideoFile(dir, pattern string) (h264 []Info) {
 		}
 	}
 	log.Debug.Printf("共找到%d个非h265的视频\n", sum)
-	pretty.P(h264)
 	return
 }
 
@@ -336,7 +235,6 @@ func GetAllNotH265VideoFile(root, pattern string) (h264 []Info) {
 		sum++
 	}
 	log.Debug.Printf("共排查%d个文件夹\n", sum)
-	pretty.P(h264)
 	return
 }
 

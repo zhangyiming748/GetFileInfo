@@ -14,7 +14,7 @@ func TestGetFileInfo(t *testing.T) {
 }
 
 func TestGetAllFileInfo(t *testing.T) {
-	absPath := "D:\\甄嬛传\\h264"
+	absPath := "F:\\整理"
 	ret := GetAllFileInfo(absPath, "mp4")
 	t.Logf("%+v\n", ret)
 }
@@ -59,4 +59,11 @@ func TestGetAllVideoFilesInfoReport(t *testing.T) {
 	root := "/Users/zen/Downloads/整理"
 	pattern := "mp4"
 	GetAllVideoFilesInfoReport(root, pattern)
+}
+func TestGetAllFileInfo4Windows(t *testing.T) {
+	files := GetAllFileInfo("F:\\整理\\nier\\2B", "png;jpg;mp4")
+	t.Log(len(files))
+	for _, file := range files {
+		pretty.P(file)
+	}
 }
