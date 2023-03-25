@@ -1,7 +1,6 @@
 package GetFileInfo
 
 import (
-	"github.com/zhangyiming748/log"
 	"golang.org/x/exp/slog"
 	"io"
 	"os"
@@ -97,17 +96,16 @@ func GetAllFileInfo(dir, pattern string) []Info {
 	var aim []Info
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		slog.Warn("读取文件夹下内容出错", err)
+		slog.Warn("出错", slog.Any("读取文件夹下内容", err))
 		return nil
 	}
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), ".") {
-			log.Info.Printf("跳过隐藏文件:%s\n", file.Name())
-			slog.Info("跳过隐藏文件", file.Name())
+			slog.Info("跳过", slog.Any("隐藏文件", file.Name()))
 			continue
 		}
 		if file.IsDir() {
-			slog.Info("跳过文件夹", file.Name())
+			slog.Info("跳过", slog.Any("文件夹", file.Name()))
 			continue
 		}
 		currentExt := path.Ext(file.Name()) //当前文件的扩展名
