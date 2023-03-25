@@ -2,8 +2,8 @@ package GetFileInfo
 
 import (
 	"encoding/json"
-	"github.com/zhangyiming748/log"
 	"github.com/zhangyiming748/replace"
+	"golang.org/x/exp/slog"
 	"io"
 	"os/exec"
 	"strconv"
@@ -86,60 +86,62 @@ type MediaInfo struct {
 func getGeneralMediaInfo(absPath string) MediaInfo {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
-	log.Debug.Printf("生成的命令是:%s\n", cmd)
+	slog.Info("生成的命令是", slog.AnyValue(cmd))
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
-		log.Warn.Panicf("cmd.StdoutPipe产生的错误:%v\n", err)
+		slog.Warn("cmd.StdoutPipe产生的错误", err)
+		return MediaInfo{}
 	}
 	if err = cmd.Start(); err != nil {
-		log.Warn.Panicf("cmd.Run产生的错误:%v\n", err)
+		slog.Warn("cmd.Run产生的错误", err)
+		return MediaInfo{}
 	}
 
 	//读取所有输出
 	bytes, err := io.ReadAll(stdout)
 	if err != nil {
-		log.Warn.Panicf("ReadAll Stdout:%v\n", err)
-
+		slog.Warn("ReadAll Stdout err", err)
+		return MediaInfo{}
 	} else {
 		//log.Debug.Printf("命令输出内容:%v\n", string(bytes))
 		if err := json.Unmarshal(bytes, &mi); err != nil {
-			log.Warn.Panicf("解析json错误:%v\n", err)
+			slog.Warn("解析json错误", err)
 		}
 	}
 
 	if err = cmd.Wait(); err != nil {
-		log.Warn.Panicf("命令执行中有错误产生:%v\n", err)
+		slog.Warn("命令执行中有错误产生", err)
 	}
 	return mi
 }
 func getMediaInfo(absPath string) (Code string, Width, Height int) {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
-	log.Info.Printf("生成的命令是:%s\n", cmd)
+	slog.Info("生成的命令", slog.Any("命令", cmd))
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
-		log.Warn.Panicf("cmd.StdoutPipe产生的错误:%v\n", err)
+		slog.Warn("cmd.StdoutPipe产生的错误", err)
 	}
 	if err = cmd.Start(); err != nil {
-		log.Warn.Panicf("cmd.Run产生的错误:%v\n", err)
+		slog.Warn("cmd.Run产生的错误", err)
 	}
 
 	//读取所有输出
 	bytes, err := io.ReadAll(stdout)
 	if err != nil {
-		log.Warn.Panicf("ReadAll Stdout:%v\n", err)
+		slog.Warn("ReadAll Stdout", err)
 
 	} else {
 		//log.Debug.Printf("命令输出内容:%v\n", string(bytes))
 		if err := json.Unmarshal(bytes, &mi); err != nil {
-			log.Warn.Panicf("解析json错误:%v\n", err)
+			slog.Warn("解析json错误", err)
 		}
 	}
 
 	if err = cmd.Wait(); err != nil {
-		log.Warn.Panicf("命令执行中有错误产生:%v\n", err)
+		slog.Warn("命令执行中有错误产生", err)
 	}
 	for _, video := range mi.Media.Track {
 		if video.Type == "Video" {
@@ -165,24 +167,26 @@ func detectFrame(absPath string) int {
 		> -show_entries stream = nb_read_frames :只显示读取的帧数.
 		> -of default = nokey = 1:noprint_wrappers = 1 :将输出格式(也称为"writer")设置为默认值,不打印每个字段的键(nokey = 1),不打印节头和页脚(noprint_wrappers = 1).
 	*/
-	log.Info.Printf("生成的命令是:%s\n", cmd)
+	slog.Info("生成的命令", cmd)
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
-		log.Warn.Panicf("cmd.StdoutPipe产生的错误:%v\n", err)
+		slog.Warn("cmd.StdoutPipe产生的错误", err)
+		return 0
 	}
 	if err = cmd.Start(); err != nil {
-		log.Warn.Panicf("cmd.Run产生的错误:%v\n", err)
+		slog.Warn("cmd.Run产生的错误", err)
+		return 0
 	}
 	tmp := make([]byte, 1024)
 	stdout.Read(tmp)
 	t := string(tmp)
 	t = replace.Replace(t)
 	if atoi, err := strconv.Atoi(t); err == nil {
-		log.Debug.Printf("文件%s帧数约为%d\n", absPath, atoi)
+		slog.Info("文件帧数", absPath, atoi)
 		return atoi
 	}
-	log.Warn.Println("读取文件帧数出错")
+	slog.Warn("读取文件帧数出错")
 	return 0
 }
 
@@ -198,14 +202,16 @@ func detectFrameWithWaitGroup(absPath string, wg *sync.WaitGroup) int {
 		> -show_entries stream = nb_read_frames :只显示读取的帧数.
 		> -of default = nokey = 1:noprint_wrappers = 1 :将输出格式(也称为"writer")设置为默认值,不打印每个字段的键(nokey = 1),不打印节头和页脚(noprint_wrappers = 1).
 	*/
-	log.Info.Printf("生成的命令是:%s\n", cmd)
+	slog.Info("生成的命令", cmd)
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
-		log.Warn.Panicf("cmd.StdoutPipe产生的错误:%v\n", err)
+		slog.Warn("cmd.StdoutPipe产生的错误", err)
+		return 0
 	}
 	if err = cmd.Start(); err != nil {
-		log.Warn.Panicf("cmd.Run产生的错误:%v\n", err)
+		slog.Warn("cmd.Run产生的错误", err)
+		return 0
 	}
 	tmp := make([]byte, 1024)
 	stdout.Read(tmp)
@@ -215,7 +221,7 @@ func detectFrameWithWaitGroup(absPath string, wg *sync.WaitGroup) int {
 		wg.Done()
 		return atoi
 	}
-	log.Warn.Println("读取文件帧数出错")
+	slog.Warn("读取文件帧数出错", absPath)
 	wg.Done()
 	return 0
 }

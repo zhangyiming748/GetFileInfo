@@ -1,8 +1,9 @@
 package GetFileInfo
 
 import (
+	"fmt"
 	"github.com/zhangyiming748/GetAllFolder"
-	"github.com/zhangyiming748/log"
+	"golang.org/x/exp/slog"
 	"os"
 	"path"
 	"path/filepath"
@@ -16,7 +17,7 @@ import (
 func GetVideoFileInfo(absPath string) Info {
 	mate, err := os.Stat(absPath)
 	if err != nil {
-		log.Warn.Printf("获取文件 %v 元数据发生错误 %v\n", absPath, err)
+		slog.Warn("获取文件元数据发生错误", absPath, err)
 	}
 	ext := path.Ext(absPath)
 	_, file := filepath.Split(absPath)
@@ -41,53 +42,22 @@ func GetVideoFileInfo(absPath string) Info {
 func GetAllVideoFileInfo(dir, pattern string) []Info {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		log.Debug.Printf("读取文件目录产生的错误:%v\n", err)
+		slog.Warn("读取文件目录产生的错误:%v\n", err)
 	}
 	var aim []Info
 	if strings.Contains(pattern, ";") {
-		exts := strings.Split(pattern, ";")
 		for _, file := range files {
 			if strings.HasPrefix(file.Name(), ".") {
-				log.Info.Println("跳过隐藏文件", file.Name())
+				slog.Info("跳过隐藏文件", slog.Any("文件名", slog.AnyValue(file.Name())))
 				continue
 			}
 			ext := path.Ext(file.Name())
-			justExt := strings.Replace(ext, ".", "", -1)
-			//log.Info.Printf("extname is %v\n", ext)
-			for _, ex := range exts {
-				if justExt == ex {
-					//aim = append(aim, file.Name())
-					mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
-					Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
-					var frame int
-					f := &Info{
-						FullPath: strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)),
-						Size:     mate.Size(),
-						FullName: file.Name(),
-						ExtName:  ext,
-						IsVideo:  true,
-						Code:     Code,
-						Width:    Width,
-						Height:   Height,
-						Frame:    frame,
-					}
-					aim = append(aim, *f)
-				}
-			}
-		}
-	} else {
-		for _, file := range files {
-			if strings.HasPrefix(file.Name(), ".") {
-				log.Info.Println("跳过隐藏文件", file.Name())
-				continue
-			}
-			ext := path.Ext(file.Name())
-			justExt := strings.Replace(ext, ".", "", -1)
-			//log.Info.Printf("extname is %v\n", ext)
-			if justExt == pattern {
-				//aim = append(aim, file.Name())
+			currentExt := path.Ext(file.Name()) //当前文件的扩展名
+			currentExt = strings.Replace(currentExt, ".", "", -1)
+			if In(currentExt, strings.Split(pattern, ";")) || currentExt == pattern {
 				mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 				Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
+				var frame int
 				f := &Info{
 					FullPath: strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)),
 					Size:     mate.Size(),
@@ -97,7 +67,7 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 					Code:     Code,
 					Width:    Width,
 					Height:   Height,
-					Frame:    0,
+					Frame:    frame,
 				}
 				aim = append(aim, *f)
 			}
@@ -119,42 +89,6 @@ type VideoReport struct {
 	AudioFormat   string //音频编码格式
 }
 
-/*
-获取视频文件信息并生成报告
-*/
-func GetAllVideoFilesInfoReport(root, pattern string) {
-	md, err := os.OpenFile("report.md", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
-	if err != nil {
-		log.Warn.Panicf("写报告文件出错:%v\n", err)
-	}
-	title := strings.Join([]string{"|文件名", "扩展名", "容器", "视频编码格式", "视频宽度", "视频高度", "音频编码格式|\n"}, "|")
-	md.WriteString(title)
-	perfix := "|:---:|:---:|:---:|:---:|:---:|:---:|:---:|\n"
-	md.WriteString(perfix)
-	folders := GetAllFolder.ListFolders(root)
-	for _, folder := range folders {
-		files := GetAllFileInfo(folder, pattern)
-		var vr VideoReport
-		for _, file := range files {
-			j := getGeneralMediaInfo(file.FullPath)
-			vr.ref = j.Media.Ref
-			for _, track := range j.Media.Track {
-				switch track.Type {
-				case "General":
-					vr.FileExtension = track.FileExtension
-					vr.container = track.Format
-				case "Video":
-					vr.VideoFormat = track.Format
-					vr.Width = track.Width
-					vr.Height = track.Height
-				case "Audio":
-					vr.AudioFormat = track.Format
-				}
-			}
-			md.WriteString(strings.Join([]string{"|", vr.ref, "|", vr.FileExtension, "|", vr.container, "|", vr.VideoFormat, "|", vr.Width, "|", vr.Height, "|", vr.AudioFormat, "|\n"}, ""))
-		}
-	}
-}
 func (i *Info) SetFrame(frame string) {
 	f, _ := strconv.Atoi(frame)
 	i.Frame = f
@@ -181,34 +115,12 @@ func GetOutOffFHD(dir, pattern string) (bigger []Info) {
 			sum++
 		}
 	}
-	log.Debug.Printf("共找到%d个大于FHD的视频\n", sum)
+	slog.Info(fmt.Sprintf("共找到%d个大于FHD的视频\n", sum))
 	return
 }
 
 /*
-获取全部超过1080P的视频并生成报告
-*/
-func GetAllOutOffFHDVideoFileReport(root, pattern string) {
-	sum := 0
-	var fhd []Info
-	folders := GetAllFolder.ListFolders(root)
-	for _, folder := range folders {
-		infos := GetOutOffFHD(folder, pattern)
-		fhd = append(fhd, infos...)
-		sum++
-	}
-	log.Debug.Printf("共排查%d个文件夹\n", sum)
-	file, err := os.OpenFile("fhdReport.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
-	if err != nil {
-		return
-	}
-	for _, v := range fhd {
-		file.WriteString(strings.Join([]string{"\"", v.FullPath, "\",", "\n"}, ""))
-	}
-}
-
-/*
-获取全部非h265编码的视频
+获取单个目录下全部非h265编码的视频
 */
 func GetNotH265VideoFile(dir, pattern string) (h264 []Info) {
 	sum := 0
@@ -217,9 +129,10 @@ func GetNotH265VideoFile(dir, pattern string) (h264 []Info) {
 		if info.Code != "HEVC" {
 			sum++
 			h264 = append(h264, info)
+			slog.Info("非H265视频", slog.Any("文件信息", h264))
 		}
 	}
-	log.Debug.Printf("共找到%d个非h265的视频\n", sum)
+	slog.Info(fmt.Sprintf("共找到%d个非h265的视频", sum))
 	return
 }
 
@@ -234,28 +147,5 @@ func GetAllNotH265VideoFile(root, pattern string) (h264 []Info) {
 		h264 = append(h264, infos...)
 		sum++
 	}
-	log.Debug.Printf("共排查%d个文件夹\n", sum)
 	return
-}
-
-/*
-获取全部非h265编码视频并生成报告
-*/
-func GetAllNotH265VideoFileReport(root, pattern string) {
-	sum := 0
-	var h264 []Info
-	folders := GetAllFolder.ListFolders(root)
-	for _, folder := range folders {
-		infos := GetNotH265VideoFile(folder, pattern)
-		h264 = append(h264, infos...)
-		sum++
-	}
-	log.Debug.Printf("共排查%d个文件夹\n", sum)
-	file, err := os.OpenFile("h264Report.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0777)
-	if err != nil {
-		return
-	}
-	for _, v := range h264 {
-		file.WriteString(strings.Join([]string{"\"", v.FullPath, "\"", "\n"}, ""))
-	}
 }

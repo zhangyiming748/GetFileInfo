@@ -2,10 +2,11 @@ package GetFileInfo
 
 import (
 	"github.com/zhangyiming748/log"
+	"golang.org/x/exp/slog"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -25,13 +26,57 @@ const (
 	MegaByte = 1000 * 1000 * 1000
 )
 
+func init() {
+	logLevel := os.Getenv("LEVEL")
+	//var level slog.Level
+	var opt slog.HandlerOptions
+	switch logLevel {
+	case "Debug":
+		opt = slog.HandlerOptions{ // 自定义option
+			AddSource: true,
+			Level:     slog.LevelDebug, // slog 默认日志级别是 info
+		}
+	case "Info":
+		opt = slog.HandlerOptions{ // 自定义option
+			AddSource: true,
+			Level:     slog.LevelInfo, // slog 默认日志级别是 info
+		}
+	case "Warn":
+		opt = slog.HandlerOptions{ // 自定义option
+			AddSource: true,
+			Level:     slog.LevelWarn, // slog 默认日志级别是 info
+		}
+	case "Err":
+		opt = slog.HandlerOptions{ // 自定义option
+			AddSource: true,
+			Level:     slog.LevelError, // slog 默认日志级别是 info
+		}
+	default:
+		slog.Warn("需要正确设置环境变量 Debug,Info,Warn or Err")
+		slog.Info("默认使用Debug等级")
+		opt = slog.HandlerOptions{ // 自定义option
+			AddSource: true,
+			Level:     slog.LevelDebug, // slog 默认日志级别是 info
+		}
+
+	}
+	file := "GetFileInfo.log"
+	logf, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		panic(err)
+	}
+	//defer logf.Close() //如果不关闭可能造成内存泄露
+	logger := slog.New(opt.NewJSONHandler(io.MultiWriter(logf, os.Stdout)))
+	slog.SetDefault(logger)
+}
+
 /*
 获取单个文件信息
 */
 func GetFileInfo(absPath string) Info {
 	mate, err := os.Stat(absPath)
 	if err != nil {
-		log.Warn.Printf("获取文件 %v 元数据发生错误 %v\n", absPath, err)
+		slog.Warn("获取文件元数据发生错误", absPath, err)
 	}
 	ext := path.Ext(absPath)
 	_, file := filepath.Split(absPath)
@@ -52,29 +97,27 @@ func GetAllFileInfo(dir, pattern string) []Info {
 	var aim []Info
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		log.Warn.Printf("读取文件夹下内容出错:%v\n", err)
+		slog.Warn("读取文件夹下内容出错", err)
 		return nil
 	}
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), ".") {
 			log.Info.Printf("跳过隐藏文件:%s\n", file.Name())
+			slog.Info("跳过隐藏文件", file.Name())
 			continue
 		}
 		if file.IsDir() {
-			log.Info.Printf("跳过文件夹:%s\n", file.Name())
+			slog.Info("跳过文件夹", file.Name())
 			continue
 		}
 		currentExt := path.Ext(file.Name()) //当前文件的扩展名
 		currentExt = strings.Replace(currentExt, ".", "", -1)
 		if In(currentExt, strings.Split(pattern, ";")) {
 			fullPath := strings.Join([]string{dir, file.Name()}, string(os.PathSeparator))
-			if runtime.GOOS == "windows" {
-				fullPath = strings.Join([]string{"\"", fullPath, "\""}, "")
-			}
-			//mate, _ := os.Stat(fullPath)
+			mate, _ := os.Stat(fullPath)
 			f := &Info{
 				FullPath: fullPath,
-				//Size:     mate.Size(),
+				Size:     mate.Size(),
 				FullName: file.Name(),
 				ExtName:  currentExt,
 			}
