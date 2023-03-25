@@ -55,7 +55,6 @@ func GetAllFileInfo(dir, pattern string) []Info {
 		log.Warn.Printf("读取文件夹下内容出错:%v\n", err)
 		return nil
 	}
-	log.Info.Println(len(files))
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), ".") {
 			log.Info.Printf("跳过隐藏文件:%s\n", file.Name())
