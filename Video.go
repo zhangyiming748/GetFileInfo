@@ -42,7 +42,7 @@ func GetVideoFileInfo(absPath string) Info {
 func GetAllVideoFileInfo(dir, pattern string) []Info {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		slog.Warn("读取文件目录产生的错误:%v\n", err)
+		slog.Warn("错误", slog.Any("读取文件目录", err))
 	}
 	var aim []Info
 	if strings.Contains(pattern, ";") {

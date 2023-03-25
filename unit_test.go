@@ -1,9 +1,16 @@
 package GetFileInfo
 
-import "testing"
+import (
+	"github.com/zhangyiming748/pretty"
+	"testing"
+)
 
 func TestGetNotH265VideoFile(t *testing.T) {
-	absPath := "/Users/zen/Downloads/Telegram Desktop/tele"
-	ret := GetAllNotH265VideoFile(absPath, "mp4;mp3")
+	absPath := "/Users/zen/Downloads"
+	ret := GetAllFileInfo(absPath, "mp4;mp3;avif;png;jpg")
 	t.Logf("%+v\n", ret)
+}
+func TestGetAllVideoFileInfo(t *testing.T) {
+	ret := GetAllVideoFileInfo("/Users/zen/Downloads/NecDaz/ff/tifa/resize", "mp4;avi")
+	pretty.P(ret)
 }

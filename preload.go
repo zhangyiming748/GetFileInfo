@@ -2,6 +2,7 @@ package GetFileInfo
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/zhangyiming748/replace"
 	"golang.org/x/exp/slog"
 	"io"
@@ -118,14 +119,14 @@ func getGeneralMediaInfo(absPath string) MediaInfo {
 func getMediaInfo(absPath string) (Code string, Width, Height int) {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
-	slog.Info("生成的命令", slog.Any("命令", cmd))
+	slog.Info("生成的命令", slog.Any("命令", fmt.Sprint(cmd)))
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
-		slog.Warn("cmd.StdoutPipe产生的错误", err)
+		slog.Warn("错误", slog.Any("cmd.StdoutPipe", err))
 	}
 	if err = cmd.Start(); err != nil {
-		slog.Warn("cmd.Run产生的错误", err)
+		slog.Warn("错误", slog.Any("cmd.Run", err))
 	}
 
 	//读取所有输出
