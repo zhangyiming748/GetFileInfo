@@ -17,7 +17,7 @@ import (
 func GetVideoFileInfo(absPath string) Info {
 	mate, err := os.Stat(absPath)
 	if err != nil {
-		slog.Warn("获取文件元数据发生错误", absPath, err)
+		mylog.Warn("获取文件元数据发生错误", absPath, err)
 	}
 	ext := path.Ext(absPath)
 	_, file := filepath.Split(absPath)
@@ -42,13 +42,13 @@ func GetVideoFileInfo(absPath string) Info {
 func GetAllVideoFileInfo(dir, pattern string) []Info {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		slog.Warn("错误", slog.Any("读取文件目录", err))
+		mylog.Warn("错误", slog.Any("读取文件目录", err))
 	}
 	var aim []Info
 	if strings.Contains(pattern, ";") {
 		for _, file := range files {
 			if strings.HasPrefix(file.Name(), ".") {
-				slog.Info("跳过隐藏文件", slog.Any("文件名", slog.AnyValue(file.Name())))
+				mylog.Info("跳过隐藏文件", slog.Any("文件名", slog.AnyValue(file.Name())))
 				continue
 			}
 			ext := path.Ext(file.Name())
@@ -115,7 +115,7 @@ func GetOutOffFHD(dir, pattern string) (bigger []Info) {
 			sum++
 		}
 	}
-	slog.Info(fmt.Sprintf("共找到%d个大于FHD的视频\n", sum))
+	slog.Info(fmt.Sprintf("共找到%d个大于FHD的视频", sum))
 	return
 }
 
@@ -129,10 +129,10 @@ func GetNotH265VideoFile(dir, pattern string) (h264 []Info) {
 		if info.Code != "HEVC" {
 			sum++
 			h264 = append(h264, info)
-			slog.Info("非H265视频", slog.Any("文件信息", h264))
+			mylog.Info("非H265视频", slog.Any("文件信息", h264))
 		}
 	}
-	slog.Info(fmt.Sprintf("共找到%d个非h265的视频", sum))
+	mylog.Info(fmt.Sprintf("共找到%d个非h265的视频", sum))
 	return
 }
 

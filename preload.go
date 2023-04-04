@@ -87,62 +87,62 @@ type MediaInfo struct {
 func getGeneralMediaInfo(absPath string) MediaInfo {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
-	slog.Info("生成的命令", slog.String("命令", fmt.Sprint(cmd)))
+	mylog.Info("生成的命令", slog.String("命令", fmt.Sprint(cmd)))
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
-		slog.Warn("cmd.StdoutPipe", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("cmd.StdoutPipe", slog.String("产生的错误", fmt.Sprint(err)))
 		return MediaInfo{}
 	}
 	if err = cmd.Start(); err != nil {
-		slog.Warn("cmd.Run", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("cmd.Run", slog.String("产生的错误", fmt.Sprint(err)))
 		return MediaInfo{}
 	}
 
 	//读取所有输出
 	bytes, err := io.ReadAll(stdout)
 	if err != nil {
-		slog.Warn("ReadAll Stdout", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("ReadAll Stdout", slog.String("产生的错误", fmt.Sprint(err)))
 		return MediaInfo{}
 	} else {
 		//log.Debug.Printf("命令输出内容:%v\n", string(bytes))
 		if err := json.Unmarshal(bytes, &mi); err != nil {
-			slog.Warn("解析json", slog.String("产生的错误", fmt.Sprint(err)))
+			mylog.Warn("解析json", slog.String("产生的错误", fmt.Sprint(err)))
 		}
 	}
 
 	if err = cmd.Wait(); err != nil {
-		slog.Warn("命令执行中", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("命令执行中", slog.String("产生的错误", fmt.Sprint(err)))
 	}
 	return mi
 }
 func getMediaInfo(absPath string) (Code string, Width, Height int) {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
-	slog.Info("生成的命令", slog.Any("命令", fmt.Sprint(cmd)))
+	mylog.Info("生成的命令", slog.String("命令", fmt.Sprint(cmd)))
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
-		slog.Warn("cmd.StdoutPipe", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("cmd.StdoutPipe", slog.String("产生的错误", fmt.Sprint(err)))
 	}
 	if err = cmd.Start(); err != nil {
-		slog.Warn("cmd.Run", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("cmd.Run", slog.String("产生的错误", fmt.Sprint(err)))
 	}
 
 	//读取所有输出
 	bytes, err := io.ReadAll(stdout)
 	if err != nil {
-		slog.Warn("ReadAll Stdout", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("ReadAll Stdout", slog.String("产生的错误", fmt.Sprint(err)))
 
 	} else {
 		//log.Debug.Printf("命令输出内容:%v\n", string(bytes))
 		if err := json.Unmarshal(bytes, &mi); err != nil {
-			slog.Warn("解析json", slog.String("产生的错误", fmt.Sprint(err)))
+			mylog.Warn("解析json", slog.String("产生的错误", fmt.Sprint(err)))
 		}
 	}
 
 	if err = cmd.Wait(); err != nil {
-		slog.Warn("命令执行中有错误产生", err)
+		mylog.Warn("命令执行中有错误产生", err)
 	}
 	for _, video := range mi.Media.Track {
 		if video.Type == "Video" {
@@ -168,15 +168,15 @@ func detectFrame(absPath string) int {
 		> -show_entries stream = nb_read_frames :只显示读取的帧数.
 		> -of default = nokey = 1:noprint_wrappers = 1 :将输出格式(也称为"writer")设置为默认值,不打印每个字段的键(nokey = 1),不打印节头和页脚(noprint_wrappers = 1).
 	*/
-	slog.Info("生成的命令", cmd)
+	mylog.Info("生成的命令", cmd)
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
-		slog.Warn("cmd.StdoutPipe", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("cmd.StdoutPipe", slog.String("产生的错误", fmt.Sprint(err)))
 		return 0
 	}
 	if err = cmd.Start(); err != nil {
-		slog.Warn("cmd.Run产生的错误", err)
+		mylog.Warn("cmd.Run产生的错误", err)
 		return 0
 	}
 	tmp := make([]byte, 1024)
@@ -184,10 +184,10 @@ func detectFrame(absPath string) int {
 	t := string(tmp)
 	t = replace.Replace(t)
 	if atoi, err := strconv.Atoi(t); err == nil {
-		slog.Info("文件帧数", absPath, atoi)
+		mylog.Info("文件帧数", absPath, atoi)
 		return atoi
 	}
-	slog.Warn("读取文件帧数出错")
+	mylog.Warn("读取文件帧数出错")
 	return 0
 }
 
@@ -203,15 +203,15 @@ func detectFrameWithWaitGroup(absPath string, wg *sync.WaitGroup) int {
 		> -show_entries stream = nb_read_frames :只显示读取的帧数.
 		> -of default = nokey = 1:noprint_wrappers = 1 :将输出格式(也称为"writer")设置为默认值,不打印每个字段的键(nokey = 1),不打印节头和页脚(noprint_wrappers = 1).
 	*/
-	slog.Info("生成的命令", cmd)
+	mylog.Info("生成的命令", cmd)
 	stdout, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 	if err != nil {
-		slog.Warn("cmd.StdoutPipe产生的错误", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("cmd.StdoutPipe产生的错误", slog.String("产生的错误", fmt.Sprint(err)))
 		return 0
 	}
 	if err = cmd.Start(); err != nil {
-		slog.Warn("cmd.Run", slog.String("产生的错误", fmt.Sprint(err)))
+		mylog.Warn("cmd.Run", slog.String("产生的错误", fmt.Sprint(err)))
 		return 0
 	}
 	tmp := make([]byte, 1024)
@@ -222,7 +222,7 @@ func detectFrameWithWaitGroup(absPath string, wg *sync.WaitGroup) int {
 		wg.Done()
 		return atoi
 	}
-	slog.Warn("读取文件帧数出错", slog.String("产生错误的文件", absPath))
+	mylog.Warn("读取文件帧数出错", slog.String("产生错误的文件", absPath))
 	wg.Done()
 	return 0
 }
