@@ -27,7 +27,7 @@ const (
 
 var mylog *slog.Logger
 
-func SetLog(level string) {
+func setLog(level string) {
 	var opt slog.HandlerOptions
 	switch level {
 	case "Debug":
@@ -57,9 +57,8 @@ func SetLog(level string) {
 			AddSource: true,
 			Level:     slog.LevelDebug, // slog 默认日志级别是 info
 		}
-
 	}
-	file := "GitFileInfo.log"
+	file := "GetFileInfo.log"
 	logf, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		panic(err)
@@ -67,15 +66,12 @@ func SetLog(level string) {
 	//defer logf.Close() //如果不关闭可能造成内存泄露
 	mylog = slog.New(opt.NewJSONHandler(io.MultiWriter(logf, os.Stdout)))
 }
-func init() {
-	l := os.Getenv("LEVEL")
-	SetLog(l)
-}
 
 /*
 获取单个文件信息
 */
-func GetFileInfo(absPath string) Info {
+func GetFileInfo(absPath, level string) Info {
+	setLog(level)
 	mate, err := os.Stat(absPath)
 	if err != nil {
 		mylog.Warn("获取文件元数据发生错误", absPath, err)
@@ -95,7 +91,8 @@ func GetFileInfo(absPath string) Info {
 /*
 获取目录下符合条件的所有文件信息
 */
-func GetAllFileInfo(dir, pattern string) []Info {
+func GetAllFileInfo(dir, pattern, level string) []Info {
+	setLog(level)
 	var aim []Info
 	files, err := os.ReadDir(dir)
 	if err != nil {
