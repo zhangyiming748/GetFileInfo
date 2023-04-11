@@ -1,8 +1,6 @@
 package GetFileInfo
 
 import (
-	"fmt"
-	"github.com/zhangyiming748/GetAllFolder"
 	"golang.org/x/exp/slog"
 	"os"
 	"path"
@@ -102,52 +100,5 @@ func (i *Info) SetFrame(frame string) {
 */
 func CountFrame(i *Info) {
 	i.Frame = detectFrame(i.FullPath)
-	return
-}
-
-/*
-获取全部超过1080P的视频
-*/
-func GetOutOffFHD(dir, pattern, level string) (bigger []Info) {
-	sum := 0
-	infos := GetAllVideoFileInfo(dir, pattern, level)
-	for _, info := range infos {
-		if info.Width > 1920 && info.Height > 1920 {
-			bigger = append(bigger, info)
-			sum++
-		}
-	}
-	mylog.Info(fmt.Sprintf("共找到%d个大于FHD的视频", sum))
-	return
-}
-
-/*
-获取单个目录下全部非h265编码的视频
-*/
-func GetNotH265VideoFile(dir, pattern, level string) (h264 []Info) {
-	sum := 0
-	infos := GetAllVideoFileInfo(dir, pattern, level)
-	for _, info := range infos {
-		if info.Code != "HEVC" {
-			sum++
-			h264 = append(h264, info)
-			mylog.Info("非H265视频", slog.Any("文件信息", h264))
-		}
-	}
-	mylog.Info(fmt.Sprintf("共找到%d个非h265的视频", sum))
-	return
-}
-
-/*
-获取全部文件夹中非h265编码的视频
-*/
-func GetAllNotH265VideoFile(root, pattern, level string) (h264 []Info) {
-	sum := 0
-	folders := GetAllFolder.ListFolders(root)
-	for _, folder := range folders {
-		infos := GetNotH265VideoFile(folder, pattern, level)
-		h264 = append(h264, infos...)
-		sum++
-	}
 	return
 }
