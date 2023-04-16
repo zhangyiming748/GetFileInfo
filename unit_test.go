@@ -11,6 +11,6 @@ func TestGetNotH265VideoFile(t *testing.T) {
 	t.Logf("%+v\n", ret)
 }
 func TestGetAllVideoFileInfo(t *testing.T) {
-	ret := GetAllVideoFileInfo("/Users/zen/Downloads/NecDaz/ff/tifa/resize", "mp4;avi")
+	ret := GetAllVideoFileInfo("/Users/zen/Downloads", "mp4;avi")
 	pretty.P(ret)
 }

@@ -141,7 +141,7 @@ func GetNotH265VideoFile(dir, pattern string) (h264 []Info) {
 */
 func GetAllNotH265VideoFile(root, pattern string) (h264 []Info) {
 	sum := 0
-	folders := GetAllFolder.ListFolders(root)
+	folders := GetAllFolder.List(root)
 	for _, folder := range folders {
 		infos := GetNotH265VideoFile(folder, pattern)
 		h264 = append(h264, infos...)

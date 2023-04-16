@@ -59,12 +59,11 @@ func SetLog(level string) {
 		}
 
 	}
-	file := "GitFileInfo.log"
+	file := "GetFileInfo.log"
 	logf, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
 	if err != nil {
 		panic(err)
 	}
-	//defer logf.Close() //如果不关闭可能造成内存泄露
 	mylog = slog.New(opt.NewJSONHandler(io.MultiWriter(logf, os.Stdout)))
 }
 func init() {
