@@ -69,8 +69,11 @@ func setLog(level string) {
 /*
 获取单个文件信息
 */
-func GetFileInfo(absPath, level string) Info {
+func init() {
+	level := os.Getenv("LEVEL")
 	setLog(level)
+}
+func GetFileInfo(absPath, level string) Info {
 	mate, err := os.Stat(absPath)
 	if err != nil {
 		mylog.Warn("获取文件元数据发生错误", absPath, err)
@@ -91,7 +94,6 @@ func GetFileInfo(absPath, level string) Info {
 获取目录下符合条件的所有文件信息
 */
 func GetAllFileInfo(dir, pattern, level string) []Info {
-	setLog(level)
 	var aim []Info
 	files, err := os.ReadDir(dir)
 	if err != nil {

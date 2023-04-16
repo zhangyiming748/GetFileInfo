@@ -13,7 +13,6 @@ import (
 获取单个视频文件信息
 */
 func GetVideoFileInfo(absPath, level string) Info {
-	setLog(level)
 	mate, err := os.Stat(absPath)
 	if err != nil {
 		mylog.Warn("获取文件元数据发生错误", absPath, err)
@@ -39,7 +38,6 @@ func GetVideoFileInfo(absPath, level string) Info {
 获取目录下符合条件的所有视频文件信息
 */
 func GetAllVideoFileInfo(dir, pattern, level string) []Info {
-	setLog(level)
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		mylog.Warn("错误", slog.Any("读取文件目录", err))
