@@ -12,7 +12,7 @@ import (
 /*
 获取单个视频文件信息
 */
-func GetVideoFileInfo(absPath, level string) Info {
+func GetVideoFileInfo(absPath string) Info {
 	mate, err := os.Stat(absPath)
 	if err != nil {
 		mylog.Warn("获取文件元数据发生错误", absPath, err)
