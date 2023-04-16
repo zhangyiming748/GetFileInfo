@@ -93,7 +93,7 @@ func GetFileInfo(absPath, level string) Info {
 /*
 获取目录下符合条件的所有文件信息
 */
-func GetAllFileInfo(dir, pattern, level string) []Info {
+func GetAllFileInfo(dir, pattern string) []Info {
 	var aim []Info
 	files, err := os.ReadDir(dir)
 	if err != nil {
