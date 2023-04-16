@@ -37,7 +37,7 @@ func GetVideoFileInfo(absPath, level string) Info {
 /*
 获取目录下符合条件的所有视频文件信息
 */
-func GetAllVideoFileInfo(dir, pattern, level string) []Info {
+func GetAllVideoFileInfo(dir, pattern string) []Info {
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		mylog.Warn("错误", slog.Any("读取文件目录", err))
