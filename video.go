@@ -19,7 +19,7 @@ func GetVideoFileInfo(absPath string) Info {
 	}
 	ext := path.Ext(absPath)
 	_, file := filepath.Split(absPath)
-	Code, Width, Height := getMediaInfo(absPath)
+	Code, Tag, Width, Height := getMediaInfo(absPath)
 	i := Info{
 		FullPath: absPath,
 		Size:     mate.Size(),
@@ -30,6 +30,7 @@ func GetVideoFileInfo(absPath string) Info {
 		Code:     Code,
 		Width:    Width,
 		Height:   Height,
+		VTag:     Tag,
 	}
 	return i
 }
@@ -54,7 +55,7 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 			currentExt = strings.Replace(currentExt, ".", "", -1)
 			if In(currentExt, strings.Split(pattern, ";")) || currentExt == pattern {
 				mate, _ := os.Stat(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
-				Code, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
+				Code, Tag, Width, Height := getMediaInfo(strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)))
 				var frame int
 				f := &Info{
 					FullPath: strings.Join([]string{dir, file.Name()}, string(os.PathSeparator)),
@@ -66,6 +67,7 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 					Width:    Width,
 					Height:   Height,
 					Frame:    frame,
+					VTag:     Tag,
 				}
 				aim = append(aim, *f)
 			}

@@ -116,7 +116,7 @@ func getGeneralMediaInfo(absPath string) MediaInfo {
 	}
 	return mi
 }
-func getMediaInfo(absPath string) (Code string, Width, Height int) {
+func getMediaInfo(absPath string) (Code, Tag string, Width, Height int) {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
 	mylog.Info("生成的命令", slog.String("命令", fmt.Sprint(cmd)))
@@ -133,10 +133,9 @@ func getMediaInfo(absPath string) (Code string, Width, Height int) {
 	bytes, err := io.ReadAll(stdout)
 	if err != nil {
 		mylog.Warn("ReadAll Stdout", slog.String("产生的错误", fmt.Sprint(err)))
-
 	} else {
 		//log.Debug.Printf("命令输出内容:%v\n", string(bytes))
-		if err := json.Unmarshal(bytes, &mi); err != nil {
+		if err = json.Unmarshal(bytes, &mi); err != nil {
 			mylog.Warn("解析json", slog.String("产生的错误", fmt.Sprint(err)))
 		}
 	}
@@ -148,9 +147,11 @@ func getMediaInfo(absPath string) (Code string, Width, Height int) {
 		if video.Type == "Video" {
 			w, _ := strconv.Atoi(video.Width)
 			h, _ := strconv.Atoi(video.Height)
+			Tag = video.CodecID
 			Code = video.Format
 			Width = w
 			Height = h
+			return
 		}
 	}
 	return
