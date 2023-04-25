@@ -73,7 +73,7 @@ func init() {
 	level := os.Getenv("LEVEL")
 	setLog(level)
 }
-func GetFileInfo(absPath, level string) Info {
+func GetFileInfo(absPath string) Info {
 	mate, err := os.Stat(absPath)
 	if err != nil {
 		mylog.Warn("获取文件元数据发生错误", absPath, err)
