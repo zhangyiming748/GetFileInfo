@@ -2,7 +2,6 @@ package GetFileInfo
 
 import (
 	"golang.org/x/exp/slog"
-	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -25,58 +24,14 @@ const (
 	MegaByte = 1000 * 1000 * 1000
 )
 
-var mylog *slog.Logger
-
-func setLog(level string) {
-	var opt slog.HandlerOptions
-	switch level {
-	case "Debug":
-		opt = slog.HandlerOptions{ // 自定义option
-			AddSource: true,
-			Level:     slog.LevelDebug, // slog 默认日志级别是 info
-		}
-	case "Info":
-		opt = slog.HandlerOptions{ // 自定义option
-			AddSource: true,
-			Level:     slog.LevelInfo, // slog 默认日志级别是 info
-		}
-	case "Warn":
-		opt = slog.HandlerOptions{ // 自定义option
-			AddSource: true,
-			Level:     slog.LevelWarn, // slog 默认日志级别是 info
-		}
-	case "Err":
-		opt = slog.HandlerOptions{ // 自定义option
-			AddSource: true,
-			Level:     slog.LevelError, // slog 默认日志级别是 info
-		}
-	default:
-		slog.Warn("需要正确设置环境变量 Debug,Info,Warn or Err")
-		slog.Info("默认使用Debug等级")
-		opt = slog.HandlerOptions{ // 自定义option
-			AddSource: true,
-			Level:     slog.LevelDebug, // slog 默认日志级别是 info
-		}
-	}
-	file := "GetFileInfo.log"
-	logf, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
-	if err != nil {
-		panic(err)
-	}
-	mylog = slog.New(opt.NewJSONHandler(io.MultiWriter(logf, os.Stdout)))
-}
-
 /*
 获取单个文件信息
 */
-func init() {
-	level := os.Getenv("LEVEL")
-	setLog(level)
-}
+
 func GetFileInfo(absPath string) Info {
 	mate, err := os.Stat(absPath)
 	if err != nil {
-		mylog.Warn("获取文件元数据发生错误", absPath, err)
+		slog.Warn("获取文件元数据发生错误", absPath, err)
 	}
 	ext := path.Ext(absPath)
 	_, file := filepath.Split(absPath)
@@ -97,16 +52,16 @@ func GetAllFileInfo(dir, pattern string) []Info {
 	var aim []Info
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		mylog.Warn("出错", slog.Any("读取文件夹下内容", err))
+		slog.Warn("出错", slog.Any("读取文件夹下内容", err))
 		return nil
 	}
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), ".") {
-			mylog.Info("跳过", slog.Any("隐藏文件", file.Name()))
+			slog.Info("跳过", slog.Any("隐藏文件", file.Name()))
 			continue
 		}
 		if file.IsDir() {
-			mylog.Info("跳过", slog.Any("文件夹", file.Name()))
+			slog.Info("跳过", slog.Any("文件夹", file.Name()))
 			continue
 		}
 		currentExt := path.Ext(file.Name()) //当前文件的扩展名

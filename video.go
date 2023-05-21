@@ -14,7 +14,7 @@ import (
 func GetVideoFileInfo(absPath string) Info {
 	mate, err := os.Stat(absPath)
 	if err != nil {
-		mylog.Warn("获取文件元数据发生错误", absPath, err)
+		slog.Warn("获取文件元数据发生错误", absPath, err)
 	}
 	ext := path.Ext(absPath)
 	_, file := filepath.Split(absPath)
@@ -39,12 +39,12 @@ func GetVideoFileInfo(absPath string) Info {
 func GetAllVideoFileInfo(dir, pattern string) []Info {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		mylog.Warn("错误", slog.Any("读取文件目录", err))
+		slog.Warn("错误", slog.Any("读取文件目录", err))
 	}
 	var aim []Info
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), ".") {
-			mylog.Info("跳过隐藏文件", slog.Any("文件名", slog.AnyValue(file.Name())))
+			slog.Info("跳过隐藏文件", slog.Any("文件名", slog.AnyValue(file.Name())))
 			continue
 		}
 		ext := path.Ext(file.Name())
