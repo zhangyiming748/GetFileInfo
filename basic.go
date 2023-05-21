@@ -15,7 +15,6 @@ type Info struct {
 	FullName string `json:"full_name,omitempty"` // 文件名
 	ExtName  string `json:"ext_name,omitempty"`  // 扩展名
 	IsVideo  bool   `json:"is_video,omitempty"`  // 是否为视频文件
-	Frame    int    `json:"frame,omitempty"`     // 视频帧数
 	Width    int    `json:"width,omitempty"`     // 视频宽度
 	Height   int    `json:"height,omitempty"`    // 视频高度
 	Code     string `json:"code,omitempty"`      // 视频编码

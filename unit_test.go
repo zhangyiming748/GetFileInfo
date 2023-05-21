@@ -1,16 +1,22 @@
 package GetFileInfo
 
 import (
-	"github.com/zhangyiming748/pretty"
+	"strings"
 	"testing"
 )
 
-func TestGetNotH265VideoFile(t *testing.T) {
-	absPath := "/Users/zen/Downloads"
-	ret := GetAllFileInfo(absPath, "mp4;mp3;avif;png;jpg", "Debug")
-	t.Logf("%+v\n", ret)
+func TestSplit(t *testing.T) {
+	str1 := "mp4"
+	str2 := "mp4;avi"
+	s1 := strings.Split(str1, ";")
+	s2 := strings.Split(str2, ";")
+	for _, v1 := range s1 {
+		t.Logf("str1 len is %v\tthis value is %v\n", len(s1), v1)
+	}
+	for _, v2 := range s2 {
+		t.Logf("str2 len is %v\tthis value is %v\n", len(s2), v2)
+	}
 }
 func TestGetAllVideoFileInfo(t *testing.T) {
-	ret := GetAllVideoFileInfo("/Users/zen/Downloads/NecDaz/ff/tifa/resize", "mp4;avi", "Debug")
-	pretty.P(ret)
+
 }
