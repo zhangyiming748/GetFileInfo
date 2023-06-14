@@ -57,11 +57,11 @@ func GetAllFileInfo(dir, pattern string) []Info {
 	}
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), ".") {
-			slog.Info("跳过", slog.Any("隐藏文件", file.Name()))
+			slog.Debug("获取文件信息", slog.String("跳过隐藏文件", file.Name()))
 			continue
 		}
 		if file.IsDir() {
-			slog.Info("跳过", slog.Any("文件夹", file.Name()))
+			slog.Debug("获取文件信息", slog.String("跳过文件夹", file.Name()))
 			continue
 		}
 		currentExt := path.Ext(file.Name()) //当前文件的扩展名

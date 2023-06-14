@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"golang.org/x/exp/slog"
-	"io"
 	"os/exec"
 	"strconv"
 )
@@ -86,60 +85,29 @@ func getGeneralMediaInfo(absPath string) MediaInfo {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
 	slog.Info("生成的命令", slog.String("命令", fmt.Sprint(cmd)))
-	stdout, err := cmd.StdoutPipe()
-	cmd.Stderr = cmd.Stdout
+	stdout, err := cmd.CombinedOutput()
 	if err != nil {
-		slog.Warn("cmd.StdoutPipe", slog.String("产生的错误", fmt.Sprint(err)))
-		return MediaInfo{}
+		slog.Warn("运行mediainfo命令", slog.String("产生的错误", fmt.Sprint(err)))
 	}
-	if err = cmd.Start(); err != nil {
-		slog.Warn("cmd.Run", slog.String("产生的错误", fmt.Sprint(err)))
-		return MediaInfo{}
-	}
-
-	//读取所有输出
-	bytes, err := io.ReadAll(stdout)
-	if err != nil {
-		slog.Warn("ReadAll Stdout", slog.String("产生的错误", fmt.Sprint(err)))
-		return MediaInfo{}
+	if err = json.Unmarshal(stdout, &mi); err != nil {
+		slog.Warn("解析json", slog.String("产生的错误", fmt.Sprint(err)))
 	} else {
-		//log.Debug.Printf("命令输出内容:%v\n", string(bytes))
-		if err := json.Unmarshal(bytes, &mi); err != nil {
-			slog.Warn("解析json", slog.String("产生的错误", fmt.Sprint(err)))
-		}
-	}
-
-	if err = cmd.Wait(); err != nil {
-		slog.Warn("命令执行中", slog.String("产生的错误", fmt.Sprint(err)))
+		slog.Debug("", slog.Any("", mi))
 	}
 	return mi
 }
 func getMediaInfo(absPath string) (Code, Tag string, Width, Height int) {
 	var mi MediaInfo
 	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
-	slog.Info("生成的命令", slog.String("命令", fmt.Sprint(cmd)))
-	stdout, err := cmd.StdoutPipe()
-	cmd.Stderr = cmd.Stdout
+	slog.Debug("生成的命令", slog.String("命令", fmt.Sprint(cmd)))
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		slog.Warn("cmd.StdoutPipe", slog.String("产生的错误", fmt.Sprint(err)))
+		slog.Warn("运行mediainfo命令", slog.Any("产生的错误", err))
 	}
-	if err = cmd.Start(); err != nil {
-		slog.Warn("cmd.Run", slog.String("产生的错误", fmt.Sprint(err)))
-	}
-
-	//读取所有输出
-	bytes, err := io.ReadAll(stdout)
-	if err != nil {
-		slog.Warn("ReadAll Stdout", slog.String("产生的错误", fmt.Sprint(err)))
+	if err = json.Unmarshal(output, &mi); err != nil {
+		slog.Warn("解析json", slog.Any("产生的错误", err))
 	} else {
-		//log.Debug.Printf("命令输出内容:%v\n", string(bytes))
-		if err = json.Unmarshal(bytes, &mi); err != nil {
-			slog.Warn("解析json", slog.String("产生的错误", fmt.Sprint(err)))
-		}
-	}
-
-	if err = cmd.Wait(); err != nil {
-		slog.Warn("命令执行中有错误产生", err)
+		slog.Debug("", slog.Any("", mi))
 	}
 	for _, video := range mi.Media.Track {
 		if video.Type == "Video" {
@@ -149,6 +117,7 @@ func getMediaInfo(absPath string) (Code, Tag string, Width, Height int) {
 			Code = video.Format
 			Width = w
 			Height = h
+			slog.Debug("", slog.String("编码", Code), slog.String("标签", Tag), slog.Int("宽", Width), slog.Int("高", Height))
 			return
 		}
 	}
