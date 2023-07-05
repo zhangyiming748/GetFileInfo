@@ -80,3 +80,31 @@ func GetAllFileInfo(dir, pattern string) []Info {
 	}
 	return aim
 }
+
+/*
+获取目录下所有文件信息
+*/
+func GetEveryFileInfo(dir string) []Info {
+	var aim []Info
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		slog.Warn("出错", slog.Any("读取文件夹下内容", err))
+		return nil
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			slog.Debug("获取文件信息", slog.String("跳过文件夹", file.Name()))
+			continue
+		}
+		fullPath := strings.Join([]string{dir, file.Name()}, string(os.PathSeparator))
+		mate, _ := os.Stat(fullPath)
+		f := &Info{
+			FullPath: fullPath,
+			Size:     mate.Size(),
+			FullName: file.Name(),
+			ExtName:  path.Ext(fullPath),
+		}
+		aim = append(aim, *f)
+	}
+	return aim
+}
