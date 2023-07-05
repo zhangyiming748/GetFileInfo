@@ -20,3 +20,8 @@ func TestSplit(t *testing.T) {
 func TestGetAllVideoFileInfo(t *testing.T) {
 
 }
+
+func TestGetEveryFileInfo(t *testing.T) {
+	f := GetEveryFileInfo("/Users/zen/Downloads")
+	t.Logf("%+v\n", f)
+}

@@ -44,7 +44,7 @@ func GetAllVideoFileInfo(dir, pattern string) []Info {
 	var aim []Info
 	for _, file := range files {
 		if strings.HasPrefix(file.Name(), ".") {
-			slog.Info("跳过隐藏文件", slog.Any("文件名", slog.AnyValue(file.Name())))
+			slog.Debug("跳过隐藏文件", slog.Any("文件名", slog.AnyValue(file.Name())))
 			continue
 		}
 		ext := path.Ext(file.Name())
