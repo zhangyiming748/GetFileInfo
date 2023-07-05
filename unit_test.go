@@ -23,6 +23,6 @@ func TestGetMediaInfo(t *testing.T) {
 }
 
 func TestGetEveryFileInfo(t *testing.T) {
-	f := GetEveryFileInfo("/Users/zen/Downloads")
+	f := GetEveryFileInfo("/Users/zen/")
 	t.Logf("%+v\n", f)
 }

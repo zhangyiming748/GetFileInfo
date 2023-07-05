@@ -97,10 +97,8 @@ func GetEveryFileInfo(dir string) []Info {
 			continue
 		}
 		fullPath := strings.Join([]string{dir, file.Name()}, string(os.PathSeparator))
-		mate, _ := os.Stat(fullPath)
 		f := &Info{
 			FullPath: fullPath,
-			Size:     mate.Size(),
 			FullName: file.Name(),
 			ExtName:  path.Ext(fullPath),
 		}
