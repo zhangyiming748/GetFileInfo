@@ -1,5 +1,8 @@
 module github.com/zhangyiming748/GetFileInfo
 
-go 1.19
+go 1.21
 
-require golang.org/x/exp v0.0.0-20230519143937-03e91628a987
+require (
+	github.com/zhangyiming748/GetAllFolder v0.0.20
+	github.com/zhangyiming748/filetype v0.0.1
+)

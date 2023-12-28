@@ -17,12 +17,6 @@ func TestSplit(t *testing.T) {
 		t.Logf("str2 len is %v\tthis value is %v\n", len(s2), v2)
 	}
 }
-func TestGetMediaInfo(t *testing.T) {
-	abs := "/Users/zen/Downloads/Taylor Swift - Shake It Off (Live at Capital's Jingle Bell Ball 2019).mp4"
-	getGeneralMediaInfo(abs)
-}
-
-func TestGetEveryFileInfo(t *testing.T) {
-	f := GetEveryFileInfo("/Users/zen/")
-	t.Logf("%+v\n", f)
+func TestFind(t *testing.T) {
+	
 }

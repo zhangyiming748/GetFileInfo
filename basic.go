@@ -1,55 +1,79 @@
 package GetFileInfo
 
+// todo 重新改写为 一个-一个文件夹-全部文件夹
 import (
-	"golang.org/x/exp/slog"
+	"fmt"
+	"github.com/zhangyiming748/GetAllFolder"
+	"github.com/zhangyiming748/GetFileInfo/mediaInfo"
+	"log/slog"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
-type Info struct {
-	FullPath string `json:"full_path,omitempty"` // 文件的绝对路径
-	Size     int64  `json:"size,omitempty"`      // 文件大小
-	FullName string `json:"full_name,omitempty"` // 文件名
-	ExtName  string `json:"ext_name,omitempty"`  // 扩展名
-	IsVideo  bool   `json:"is_video,omitempty"`  // 是否为视频文件
-	Width    int    `json:"width,omitempty"`     // 视频宽度
-	Height   int    `json:"height,omitempty"`    // 视频高度
-	Code     string `json:"code,omitempty"`      // 视频编码
-	VTag     string `json:"v_tag,omitempty"`     // 视频标签
+// note 重新改写为具有全部类型文件的通用结构体
+
+type BasicInfo struct {
+	FullPath  string      `json:"full_path,omitempty"`  // 文件的绝对路径
+	FullName  string      `json:"full_name,omitempty"`  // 文件名
+	PurgeName string      `json:"purge_name,omitempty"` // 单纯文件名
+	PurgeExt  string      `json:"purge_ext,omitempty"`  // 单纯扩展名
+	PurgePath string      `json:"purge_path,omitempty"` // 文件所在路径 包含最后一个路径分隔符
+	MD5       string      `json:"md_5,omitempty"`       // 文件MD5
+	MediaInfo interface{} `json:"media_info"`           // 文件类型对应的mediainfo结构体
 }
 
-const (
-	MegaByte = 1000 * 1000 * 1000
-)
+func (i *BasicInfo) SetAudioMediaInfo(info mediaInfo.AudioInfo) {
+	i.MediaInfo = info
+}
+func (i *BasicInfo) SetImageMediaInfo(info mediaInfo.ImageInfo) {
+	i.MediaInfo = info
+}
+func (i *BasicInfo) SetGeneralMediaInfo(info mediaInfo.GeneralInfo) {
+	i.MediaInfo = info
+}
+func (i *BasicInfo) SetVideoMediaInfo(info mediaInfo.VideoInfo) {
+	i.MediaInfo = info
+}
 
 /*
-获取单个文件信息
+获取单个文件基础信息
 */
 
-func GetFileInfo(absPath string) Info {
-	mate, err := os.Stat(absPath)
-	if err != nil {
-		slog.Warn("获取文件元数据发生错误", absPath, err)
-	}
+func GetFileInfo(absPath string) BasicInfo {
 	ext := path.Ext(absPath)
-	_, file := filepath.Split(absPath)
-	i := Info{
-		FullPath: absPath,
-		Size:     mate.Size(),
-		FullName: file,
-		ExtName:  ext,
-		IsVideo:  false,
+	dir, file := filepath.Split(absPath)
+	i := BasicInfo{
+		FullPath:  absPath,
+		FullName:  file,
+		PurgeName: strings.Replace(file, ext, "", 1),
+		PurgeExt:  strings.Replace(ext, ".", "", 1),
+		PurgePath: dir,
+		MD5:       GetMD5(absPath),
+	}
+	// todo 测试使用文件头判断文件类型
+	//t := SelectType(strings.Replace(ext, ".", "", 1))
+	t := SelectTypeByHead(absPath)
+	switch t {
+	case "Audio":
+		i.SetAudioMediaInfo(mediaInfo.GetAudioMedia(absPath))
+	case "Video":
+		i.SetVideoMediaInfo(mediaInfo.GetVideoMedia(absPath))
+	case "Image":
+		i.SetImageMediaInfo(mediaInfo.GetImageMedia(absPath))
+	case "General":
+		i.SetGeneralMediaInfo(mediaInfo.GetGeneralMedia(absPath))
 	}
 	return i
 }
 
 /*
-获取目录下符合条件的所有文件信息
+获取目录下符合条件的所有文件基础信息
 */
-func GetAllFileInfo(dir, pattern string) []Info {
-	var aim []Info
+func GetAllFileInfo(dir, pattern string) []BasicInfo {
+	var aim []BasicInfo
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		slog.Warn("出错", slog.Any("读取文件夹下内容", err))
@@ -64,45 +88,91 @@ func GetAllFileInfo(dir, pattern string) []Info {
 			slog.Debug("获取文件信息", slog.String("跳过文件夹", file.Name()))
 			continue
 		}
-		currentExt := path.Ext(file.Name()) //当前文件的扩展名
-		currentExt = strings.Replace(currentExt, ".", "", -1)
-		if In(currentExt, strings.Split(pattern, ";")) {
-			fullPath := strings.Join([]string{dir, file.Name()}, string(os.PathSeparator))
-			mate, _ := os.Stat(fullPath)
-			f := &Info{
-				FullPath: fullPath,
-				Size:     mate.Size(),
-				FullName: file.Name(),
-				ExtName:  currentExt,
-			}
-			aim = append(aim, *f)
+		absPath := strings.Join([]string{dir, file.Name()}, string(os.PathSeparator))
+		ext := strings.Replace(path.Ext(absPath), ".", "", 1)
+		if In(ext, strings.Split(pattern, ";")) {
+			bi := GetFileInfo(absPath)
+			aim = append(aim, bi)
+			slog.Debug("获取到的单个文件全部信息", slog.Any("", bi))
+		} else {
+			slog.Info("跳过非目标文件")
 		}
 	}
 	return aim
 }
 
 /*
-获取目录下所有文件信息
+获取全部目录下符合条件的所有文件基础信息
 */
-func GetEveryFileInfo(dir string) []Info {
-	var aim []Info
+func GetAllFilesInfo(dir, pattern string) []BasicInfo {
+	var aims []BasicInfo
+	folders := GetAllFolder.List(dir)
+	//包括根目录
+	folders = append(folders, dir)
+	for _, folder := range folders {
+		aim := GetAllFileInfo(folder, pattern)
+		aims = append(aims, aim...)
+	}
+	return aims
+}
+
+/*
+通过channel获取目录下符合条件的所有文件基础信息
+*/
+func GetAllFileInfoByChan(dir, pattern string, limit chan struct{}, msg chan []BasicInfo, wg *sync.WaitGroup) {
+	defer wg.Done()
+	msg <- GetAllFileInfo(dir, pattern)
+	<-limit
+}
+
+/*
+通过channel获取全部目录下符合条件的所有文件基础信息
+*/
+func GetAllFilesInfoByChan(dir, pattern string) []BasicInfo {
+	var aims []BasicInfo
+
+	var wg sync.WaitGroup
+	limit := make(chan struct{}, 12)
+	msg := make(chan []BasicInfo, 1)
+
+	folders := GetAllFolder.List(dir)
+	//包括根目录
+	folders = append(folders, dir)
+
+	for _, folder := range folders {
+		limit <- struct{}{}
+		wg.Add(1)
+		go GetAllFileInfoByChan(folder, pattern, limit, msg, &wg)
+	}
+	go func() {
+		wg.Wait()
+		close(msg)
+	}()
+
+	for data := range msg {
+		slog.Debug("msg", slog.Any("通道中获取", data))
+		aims = append(aims, data...)
+	}
+	return aims
+}
+
+//func (i *BasicInfo) setMD5(md5 string) {
+//	i.MD5 = md5
+//}
+
+/*
+获取全部文件的文件名,批量插入数据库
+*/
+func GetAllFiles(dir string) (names []string) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		slog.Warn("出错", slog.Any("读取文件夹下内容", err))
-		return nil
+		slog.Warn("读取目录下文件出错", slog.String("错误文本", fmt.Sprint(err)))
 	}
 	for _, file := range files {
-		if file.IsDir() {
-			slog.Debug("获取文件信息", slog.String("跳过文件夹", file.Name()))
+		if strings.HasPrefix(file.Name(), ".") {
 			continue
 		}
-		fullPath := strings.Join([]string{dir, file.Name()}, string(os.PathSeparator))
-		f := &Info{
-			FullPath: fullPath,
-			FullName: file.Name(),
-			ExtName:  path.Ext(fullPath),
-		}
-		aim = append(aim, *f)
+		names = append(names, file.Name())
 	}
-	return aim
+	return names
 }

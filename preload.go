@@ -1,129 +1,20 @@
 package GetFileInfo
 
 import (
-	"encoding/json"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
-	"golang.org/x/exp/slog"
+	"github.com/zhangyiming748/filetype"
+	"io"
+	"log/slog"
+	"os"
 	"os/exec"
-	"strconv"
+	"regexp"
 )
 
-type MediaInfo struct {
-	CreatingLibrary struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-		Url     string `json:"url"`
-	} `json:"creatingLibrary"`
-	Media struct {
-		Ref   string `json:"@ref"`
-		Track []struct {
-			Type                  string `json:"@type"` // Video
-			VideoCount            string `json:"VideoCount,omitempty"`
-			FileExtension         string `json:"FileExtension,omitempty"`
-			Format                string `json:"Format"`
-			FormatProfile         string `json:"Format_Profile"`
-			CodecID               string `json:"CodecID"`
-			CodecIDCompatible     string `json:"CodecID_Compatible,omitempty"`
-			FileSize              string `json:"FileSize,omitempty"`
-			Duration              string `json:"Duration"`
-			OverallBitRateMode    string `json:"OverallBitRate_Mode,omitempty"`
-			OverallBitRate        string `json:"OverallBitRate,omitempty"`
-			FrameRate             string `json:"FrameRate"`
-			FrameCount            string `json:"FrameCount"`
-			StreamSize            string `json:"StreamSize"`
-			HeaderSize            string `json:"HeaderSize,omitempty"`
-			DataSize              string `json:"DataSize,omitempty"`
-			FooterSize            string `json:"FooterSize,omitempty"`
-			IsStreamable          string `json:"IsStreamable,omitempty"`
-			EncodedDate           string `json:"Encoded_Date"`
-			TaggedDate            string `json:"Tagged_Date"`
-			FileModifiedDate      string `json:"File_Modified_Date,omitempty"`
-			FileModifiedDateLocal string `json:"File_Modified_Date_Local,omitempty"`
-			Extra                 struct {
-				TIM                   string `json:"TIM,omitempty"`
-				TSC                   string `json:"TSC,omitempty"`
-				TSZ                   string `json:"TSZ,omitempty"`
-				CodecConfigurationBox string `json:"CodecConfigurationBox,omitempty"`
-			} `json:"extra"`
-			StreamOrder                    string `json:"StreamOrder,omitempty"`
-			ID                             string `json:"ID,omitempty"`
-			FormatLevel                    string `json:"Format_Level,omitempty"`
-			FormatSettingsCABAC            string `json:"Format_Settings_CABAC,omitempty"`
-			FormatSettingsRefFrames        string `json:"Format_Settings_RefFrames,omitempty"`
-			BitRateMode                    string `json:"BitRate_Mode,omitempty"`
-			BitRate                        string `json:"BitRate,omitempty"`
-			Width                          string `json:"Width,omitempty"`
-			Height                         string `json:"Height,omitempty"`
-			StoredWidth                    string `json:"Stored_Width,omitempty"`
-			SampledWidth                   string `json:"Sampled_Width,omitempty"`
-			SampledHeight                  string `json:"Sampled_Height,omitempty"`
-			PixelAspectRatio               string `json:"PixelAspectRatio,omitempty"`
-			DisplayAspectRatio             string `json:"DisplayAspectRatio,omitempty"`
-			Rotation                       string `json:"Rotation,omitempty"`
-			FrameRateMode                  string `json:"FrameRate_Mode,omitempty"`
-			ColorSpace                     string `json:"ColorSpace,omitempty"`
-			ChromaSubsampling              string `json:"ChromaSubsampling,omitempty"`
-			BitDepth                       string `json:"BitDepth,omitempty"`
-			ScanType                       string `json:"ScanType,omitempty"`
-			Language                       string `json:"Language,omitempty"`
-			BufferSize                     string `json:"BufferSize,omitempty"`
-			ColourDescriptionPresent       string `json:"colour_description_present,omitempty"`
-			ColourDescriptionPresentSource string `json:"colour_description_present_Source,omitempty"`
-			ColourRange                    string `json:"colour_range,omitempty"`
-			ColourRangeSource              string `json:"colour_range_Source,omitempty"`
-			ColourPrimaries                string `json:"colour_primaries,omitempty"`
-			ColourPrimariesSource          string `json:"colour_primaries_Source,omitempty"`
-			TransferCharacteristics        string `json:"transfer_characteristics,omitempty"`
-			TransferCharacteristicsSource  string `json:"transfer_characteristics_Source,omitempty"`
-			MatrixCoefficients             string `json:"matrix_coefficients,omitempty"`
-			MatrixCoefficientsSource       string `json:"matrix_coefficients_Source,omitempty"`
-		} `json:"track"`
-	} `json:"media"`
-}
-
-func getGeneralMediaInfo(absPath string) MediaInfo {
-	var mi MediaInfo
-	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
-	slog.Info("生成的命令", slog.String("命令", fmt.Sprint(cmd)))
-	stdout, err := cmd.CombinedOutput()
-	if err != nil {
-		slog.Warn("运行mediainfo命令", slog.String("产生的错误", fmt.Sprint(err)))
-	}
-	if err = json.Unmarshal(stdout, &mi); err != nil {
-		slog.Warn("解析json", slog.String("产生的错误", fmt.Sprint(err)))
-	} else {
-		slog.Debug("", slog.Any("", mi))
-	}
-	return mi
-}
-func getMediaInfo(absPath string) (Code, Tag string, Width, Height int) {
-	var mi MediaInfo
-	cmd := exec.Command("mediainfo", absPath, "--Output=JSON")
-	slog.Debug("生成的命令", slog.String("命令", fmt.Sprint(cmd)))
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		slog.Warn("运行mediainfo命令", slog.Any("产生的错误", err))
-	}
-	if err = json.Unmarshal(output, &mi); err != nil {
-		slog.Warn("解析json", slog.Any("产生的错误", err))
-	} else {
-		slog.Debug("", slog.Any("", mi))
-	}
-	for _, video := range mi.Media.Track {
-		if video.Type == "Video" {
-			w, _ := strconv.Atoi(video.Width)
-			h, _ := strconv.Atoi(video.Height)
-			Tag = video.CodecID
-			Code = video.Format
-			Width = w
-			Height = h
-			slog.Debug("", slog.String("编码", Code), slog.String("标签", Tag), slog.Int("宽", Width), slog.Int("高", Height))
-			return
-		}
-	}
-	return
-}
-
+/*
+判断当前文件扩展名是否在选定的扩展名列表中
+*/
 func In(target string, str_array []string) bool {
 	for _, element := range str_array {
 		if target == element {
@@ -131,4 +22,163 @@ func In(target string, str_array []string) bool {
 		}
 	}
 	return false
+}
+
+/*
+通过文件头判断文件类型
+选择合适的结构体
+*/
+func SelectTypeByHead(fp string) string {
+	file, _ := os.Open(fp)
+	// We only have to pass the file header = first 261 bytes
+	head := make([]byte, 261)
+	file.Read(head)
+	if filetype.IsVideo(head) {
+		slog.Debug("File is a video")
+		return "Video"
+	} else if filetype.IsAudio(head) {
+		slog.Debug("File is a audio")
+		return "Audio"
+	} else if filetype.IsImage(head) {
+		slog.Debug("File is a image")
+		return "Image"
+	} else {
+		slog.Debug("File is a general")
+		return "General"
+	}
+}
+
+/*
+获取文件MD5
+*/
+func GetMD5(fp string) string {
+	pFile, err := os.Open(fp)
+	if err != nil {
+		slog.Warn("获取md5打开文件出错", slog.String("文件名", fp), slog.Any("错误文本", err))
+		return ""
+	}
+	defer pFile.Close()
+	md5h := md5.New()
+	io.Copy(md5h, pFile)
+	return hex.EncodeToString(md5h.Sum(nil))
+}
+
+/*
+通过扩展名判断文件类型
+选择合适的结构体
+*/
+func SelectType(ext string) string {
+	switch ext {
+	case "jpeg":
+		return "Image"
+	case "JPEG":
+		return "Image"
+	case "jpg":
+		return "Image"
+	case "JPG":
+		return "Image"
+	case "png":
+		return "Image"
+	case "PNG":
+		return "Image"
+	case "webp":
+		return "Image"
+	case "WEBP":
+		return "Image"
+	case "tif":
+		return "Image"
+	case "TIF":
+		return "Image"
+
+	case "mp3":
+		return "Audio"
+	case "MP3":
+		return "Audio"
+	case "aac":
+		return "Audio"
+	case "AAC":
+		return "Audio"
+	case "m4a":
+		return "Audio"
+	case "M4A":
+		return "Audio"
+	case "flac":
+		return "Audio"
+	case "FLAC":
+		return "Audio"
+	case "wma":
+		return "Audio"
+	case "WMA":
+		return "Audio"
+	case "wav":
+		return "Audio"
+	case "WAV":
+		return "Audio"
+	case "ogg":
+		return "Audio"
+	case "OGG":
+		return "Audio"
+
+	case "webm":
+		return "Video"
+	case "WEBM":
+		return "Video"
+	case "mkv":
+		return "Video"
+	case "MKV":
+		return "Video"
+	case "m4v":
+		return "Video"
+	case "M4V":
+		return "Video"
+	case "mp4":
+		return "Video"
+	case "MP4":
+		return "Video"
+	case "mov":
+		return "Video"
+	case "MOV":
+		return "Video"
+	case "avi":
+		return "Video"
+	case "AVI":
+		return "Video"
+	case "wmv":
+		return "Video"
+	case "WMV":
+		return "Video"
+	case "ts":
+		return "Video"
+	case "TS":
+		return "Video"
+	case "rmvb":
+		return "Video"
+	case "RMVB":
+		return "Video"
+	case "flv":
+		return "Video"
+	case "FLV":
+		return "Video"
+	case "vob":
+		return "Video"
+	case "VOB":
+		return "Video"
+	default:
+		return "General"
+	}
+}
+
+func GetBitRate(fp string) (string, error) {
+	ff, _ := exec.Command("ffmpeg", "-i", fp).CombinedOutput()
+	re := regexp.MustCompile(`bitrate:\s*(\d+)\s*kb/s`)
+	matches := re.FindAllStringSubmatch(string(ff), -1)
+	if len(matches) > 0 {
+		str := fmt.Sprintf("比特率字段:%s\n", matches)
+		fmt.Println(str)
+		num := fmt.Sprint(matches[0][1])
+		slog.Debug(num)
+		return num, nil
+	}
+
+	return "", nil
 }
