@@ -95,7 +95,7 @@ func GetAllFileInfo(dir, pattern string) []BasicInfo {
 			aim = append(aim, bi)
 			slog.Debug("获取到的单个文件全部信息", slog.Any("", bi))
 		} else {
-			slog.Info("跳过非目标文件")
+			slog.Debug("跳过非目标文件")
 		}
 	}
 	return aim
