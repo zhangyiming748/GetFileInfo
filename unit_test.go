@@ -18,5 +18,16 @@ func TestSplit(t *testing.T) {
 	}
 }
 func TestFind(t *testing.T) {
-	
+
+}
+
+func TestGetAllFast(t *testing.T) {
+	fast, err := GetAllKindsOfFilesInfoFast("F:\\large\\GirlFriend4ever", []string{"jpg", "png"})
+	if err != nil {
+		return
+	}
+
+	for _, v := range fast {
+		t.Logf("%v\n", v)
+	}
 }

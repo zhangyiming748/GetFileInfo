@@ -176,3 +176,78 @@ func GetAllFiles(dir string) (names []string) {
 	}
 	return names
 }
+
+/*
+快速获取所有类型的文件信息
+*/
+func GetAllKindsOfFileInfoFast(dir string, patterns []string) ([]string, error) {
+	var aims []string
+	for _, pattern := range patterns {
+		if aim, err := GetAllFileInfoFast(dir, pattern); err != nil {
+			return nil, err
+		} else {
+			aims = append(aims, aim...)
+		}
+	}
+	return aims, nil
+}
+
+/*
+获取目录下符合条件的所有文件基础信息
+*/
+func GetAllFileInfoFast(dir, pattern string) ([]string, error) {
+	var files []string
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && strings.HasSuffix(info.Name(), pattern) {
+			files = append(files, path)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
+/*
+获取全部目录下符合条件的所有文件基础信息
+*/
+func GetAllFilesInfoFast(dir, pattern string) ([]string, error) {
+	var aims []string
+	folders := GetAllFolder.List(dir)
+	//包括根目录
+	folders = append(folders, dir)
+	for _, folder := range folders {
+		if aim, err := GetAllFileInfoFast(folder, pattern); err != nil {
+			return nil, err
+		} else {
+			aims = append(aims, aim...)
+		}
+	}
+	return aims, nil
+}
+
+/*
+获取全部目录下符合条件的扩展名列表所有文件基础信息
+*/
+func GetAllKindsOfFilesInfoFast(dir string, patterns []string) ([]string, error) {
+	var aims []string
+	folders := GetAllFolder.List(dir)
+	//包括根目录
+	folders = append(folders, dir)
+	for _, folder := range folders {
+		for _, pattern := range patterns {
+			if aim, err := GetAllFileInfoFast(folder, pattern); err != nil {
+				return nil, err
+			} else {
+				aims = append(aims, aim...)
+			}
+		}
+	}
+	return aims, nil
+}
